@@ -1226,6 +1226,184 @@
        </item>
       </layout>
      </widget>
+     <widget class="QWidget" name="aiFlashcardsTab">
+      <attribute name="title">
+       <string>preferences_ai_flashcards</string>
+      </attribute>
+      <layout class="QVBoxLayout" name="verticalLayout_ai">
+       <property name="spacing">
+        <number>12</number>
+       </property>
+       <property name="leftMargin">
+        <number>12</number>
+       </property>
+       <property name="topMargin">
+        <number>12</number>
+       </property>
+       <property name="rightMargin">
+        <number>12</number>
+       </property>
+       <property name="bottomMargin">
+        <number>12</number>
+       </property>
+       <item>
+        <widget class="QLabel" name="aiFlashcardsDescription">
+         <property name="text">
+          <string>preferences_ai_flashcards_description</string>
+         </property>
+         <property name="wordWrap">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QGroupBox" name="aiApiKeyGroup">
+         <property name="title">
+          <string notr="true">OpenAI</string>
+         </property>
+         <layout class="QVBoxLayout" name="verticalLayout_ai_key">
+          <item>
+           <layout class="QHBoxLayout" name="horizontalLayout_ai_key">
+            <item>
+             <widget class="QLabel" name="aiApiKeyLabel">
+              <property name="text">
+               <string>preferences_ai_openai_api_key</string>
+              </property>
+              <property name="buddy">
+               <cstring>aiApiKey</cstring>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLineEdit" name="aiApiKey">
+              <property name="echoMode">
+               <enum>QLineEdit::EchoMode::Password</enum>
+              </property>
+              <property name="placeholderText">
+               <string notr="true">sk-...</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <layout class="QHBoxLayout" name="horizontalLayout_ai_test">
+            <item>
+             <spacer name="horizontalSpacer_ai">
+              <property name="orientation">
+               <enum>Qt::Orientation::Horizontal</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>40</width>
+                <height>20</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+            <item>
+             <widget class="QLabel" name="aiConnectionStatus">
+              <property name="text">
+               <string/>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="aiTestConnection">
+              <property name="text">
+               <string>preferences_ai_test_connection</string>
+              </property>
+              <property name="autoDefault">
+               <bool>false</bool>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item>
+        <widget class="QGroupBox" name="aiDefaultsGroup">
+         <property name="title">
+          <string>preferences_general</string>
+         </property>
+         <layout class="QGridLayout" name="gridLayout_ai">
+          <item row="0" column="0">
+           <widget class="QLabel" name="aiCardTypeLabel">
+            <property name="text">
+             <string>preferences_ai_default_card_type</string>
+            </property>
+            <property name="buddy">
+             <cstring>aiDefaultCardType</cstring>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <widget class="QComboBox" name="aiDefaultCardType">
+            <item>
+             <property name="text">
+              <string>preferences_ai_card_type_auto</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>preferences_ai_card_type_basic</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>preferences_ai_card_type_basic_reversed</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>preferences_ai_card_type_cloze</string>
+             </property>
+            </item>
+           </widget>
+          </item>
+          <item row="1" column="0">
+           <widget class="QLabel" name="aiCardLimitLabel">
+            <property name="text">
+             <string>preferences_ai_default_card_limit</string>
+            </property>
+            <property name="buddy">
+             <cstring>aiDefaultCardLimit</cstring>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1">
+           <widget class="QSpinBox" name="aiDefaultCardLimit">
+            <property name="minimum">
+             <number>1</number>
+            </property>
+            <property name="maximum">
+             <number>100</number>
+            </property>
+            <property name="value">
+             <number>20</number>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item>
+        <spacer name="verticalSpacer_ai">
+         <property name="orientation">
+          <enum>Qt::Orientation::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>40</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+      </layout>
+     </widget>
     </widget>
    </item>
    <item>
@@ -1294,6 +1472,10 @@
   <tabstop>monthly_backups</tabstop>
   <tabstop>syncAnkiHubLogout</tabstop>
   <tabstop>syncAnkiHubLogin</tabstop>
+  <tabstop>aiApiKey</tabstop>
+  <tabstop>aiTestConnection</tabstop>
+  <tabstop>aiDefaultCardType</tabstop>
+  <tabstop>aiDefaultCardLimit</tabstop>
   <tabstop>buttonBox</tabstop>
   <tabstop>tabWidget</tabstop>
  </tabstops>

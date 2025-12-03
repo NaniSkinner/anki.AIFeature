@@ -203,9 +203,11 @@ class Preferences(QDialog):
     def setup_profile(self) -> None:
         "Setup options stored in the user profile."
         self.setup_network()
+        self.setup_ai_flashcards()
 
     def update_profile(self) -> None:
         self.update_network()
+        self.update_ai_flashcards()
 
     # Profile: network
     ######################################################################
@@ -302,6 +304,53 @@ class Preferences(QDialog):
             self.mw.col.mod_schema(check=False)
         self.mw.pm.set_custom_sync_url(self.form.custom_sync_url.text())
         self.mw.pm.set_network_timeout(self.form.network_timeout.value())
+
+    # Profile: AI Flashcards
+    ######################################################################
+
+    def setup_ai_flashcards(self) -> None:
+        form = self.form
+        # Load saved values
+        api_key = self.mw.pm.ai_openai_api_key() or ""
+        form.aiApiKey.setText(api_key)
+        form.aiDefaultCardType.setCurrentIndex(self.mw.pm.ai_default_card_type())
+        form.aiDefaultCardLimit.setValue(self.mw.pm.ai_default_card_limit())
+        # Connect test button
+        qconnect(form.aiTestConnection.clicked, self.test_ai_connection)
+
+    def update_ai_flashcards(self) -> None:
+        form = self.form
+        api_key = form.aiApiKey.text().strip()
+        self.mw.pm.set_ai_openai_api_key(api_key if api_key else None)
+        self.mw.pm.set_ai_default_card_type(form.aiDefaultCardType.currentIndex())
+        self.mw.pm.set_ai_default_card_limit(form.aiDefaultCardLimit.value())
+
+    def test_ai_connection(self) -> None:
+        api_key = self.form.aiApiKey.text().strip()
+        if not api_key:
+            self.form.aiConnectionStatus.setText(tr.preferences_ai_no_api_key())
+            return
+
+        self.form.aiConnectionStatus.setText("Testing...")
+        self.form.aiTestConnection.setEnabled(False)
+
+        def on_done(success: bool, error: str | None = None) -> None:
+            self.form.aiTestConnection.setEnabled(True)
+            if success:
+                self.form.aiConnectionStatus.setText(
+                    tr.preferences_ai_connection_successful()
+                )
+            else:
+                self.form.aiConnectionStatus.setText(
+                    tr.preferences_ai_connection_failed(error=error or "Unknown error")
+                )
+
+        # For now, just do a simple validation of key format
+        # Full API test will be implemented in Phase 2
+        if api_key.startswith("sk-") and len(api_key) > 20:
+            on_done(True)
+        else:
+            on_done(False, "Invalid API key format")
 
     # Global preferences
     ######################################################################

@@ -759,3 +759,32 @@ create table if not exists profiles
             schemes.append(scheme)
 
         self.set_allowed_url_schemes(schemes)
+
+    # AI Flashcards settings
+    def set_ai_openai_api_key(self, val: str | None) -> None:
+        from aqt.secret import obfuscate_api_key
+
+        if val:
+            self.profile["aiOpenAIApiKey"] = obfuscate_api_key(val)
+        else:
+            self.profile["aiOpenAIApiKey"] = None
+
+    def ai_openai_api_key(self) -> str | None:
+        from aqt.secret import deobfuscate_api_key
+
+        stored = self.profile.get("aiOpenAIApiKey")
+        if stored:
+            return deobfuscate_api_key(stored)
+        return None
+
+    def set_ai_default_card_type(self, val: int) -> None:
+        self.profile["aiDefaultCardType"] = val
+
+    def ai_default_card_type(self) -> int:
+        return self.profile.get("aiDefaultCardType", 0)  # 0 = auto
+
+    def set_ai_default_card_limit(self, val: int) -> None:
+        self.profile["aiDefaultCardLimit"] = val
+
+    def ai_default_card_limit(self) -> int:
+        return self.profile.get("aiDefaultCardLimit", 20)

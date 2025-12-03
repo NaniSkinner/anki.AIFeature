@@ -92,6 +92,21 @@ preferences-url-scheme-warning = Blocked attempt to open `{ $link }`, which may 
 preferences-url-scheme-allow-once = Allow Once
 preferences-url-scheme-always-allow = Always Allow
 
+## AI Flashcards
+preferences-ai-flashcards = AI Flashcards
+preferences-ai-flashcards-description = Generate flashcards from documents using AI. Requires an OpenAI API key.
+preferences-ai-openai-api-key = OpenAI API Key
+preferences-ai-test-connection = Test Connection
+preferences-ai-connection-successful = Connection successful!
+preferences-ai-connection-failed = Connection failed: { $error }
+preferences-ai-default-card-type = Default card type
+preferences-ai-card-type-auto = Auto (AI decides)
+preferences-ai-card-type-basic = Basic
+preferences-ai-card-type-basic-reversed = Basic (and reversed)
+preferences-ai-card-type-cloze = Cloze
+preferences-ai-default-card-limit = Default card limit
+preferences-ai-no-api-key = No API key configured
+
 ## NO NEED TO TRANSLATE. This text is no longer used by Anki, and will be removed in the future.
 
 preferences-basic = Basic
