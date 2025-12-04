@@ -119,7 +119,7 @@ import aqt.forms
 
 
 from aqt import addcards, addons, browser, editcurrent, filtered_deck  # isort:skip
-from aqt import stats, about, preferences, mediasync  # isort:skip
+from aqt import stats, about, preferences, mediasync, ai_flashcards  # isort:skip
 
 
 class DialogManager:
@@ -138,15 +138,20 @@ class DialogManager:
 
     def open(self, name: str, *args: Any, **kwargs: Any) -> Any:
         (creator, instance) = self._dialogs[name]
-        if instance:
-            if instance.windowState() & Qt.WindowState.WindowMinimized:
-                instance.setWindowState(
-                    instance.windowState() & ~Qt.WindowState.WindowMinimized
-                )
-            instance.activateWindow()
-            instance.raise_()
-            if hasattr(instance, "reopen"):
-                instance.reopen(*args, **kwargs)
+        if instance and not sip.isdeleted(instance):
+            try:
+                if instance.windowState() & Qt.WindowState.WindowMinimized:
+                    instance.setWindowState(
+                        instance.windowState() & ~Qt.WindowState.WindowMinimized
+                    )
+                instance.activateWindow()
+                instance.raise_()
+                if hasattr(instance, "reopen"):
+                    instance.reopen(*args, **kwargs)
+            except RuntimeError:
+                # C++ object was deleted between the check and access
+                instance = creator(*args, **kwargs)
+                self._dialogs[name][1] = instance
         else:
             instance = creator(*args, **kwargs)
             self._dialogs[name][1] = instance
@@ -170,6 +175,11 @@ class DialogManager:
             if not instance:
                 continue
 
+            # Handle case where C++ object was deleted but Python reference remains
+            if sip.isdeleted(instance):
+                self.markClosed(name)
+                continue
+
             def callback() -> None:
                 if self.allClosed():
                     onsuccess()
@@ -177,11 +187,16 @@ class DialogManager:
                     # still waiting for others to close
                     pass
 
-            if getattr(instance, "silentlyClose", False):
-                instance.close()
+            try:
+                if getattr(instance, "silentlyClose", False):
+                    instance.close()
+                    callback()
+                else:
+                    instance.closeWithCallback(callback)
+            except RuntimeError:
+                # C++ object was deleted between the check and access
+                self.markClosed(name)
                 callback()
-            else:
-                instance.closeWithCallback(callback)
 
         return True
 

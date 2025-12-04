@@ -1,0 +1,210 @@
+// Copyright: Ankitects Pty Ltd and contributors
+// License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
+
+@use "$lib/sass/bootstrap-dark";
+
+@import "$lib/sass/base";
+@import "$lib/sass/bootstrap-forms";
+@import "$lib/sass/bootstrap-tooltip";
+
+.night-mode {
+    @include bootstrap-dark.night-mode;
+}
+
+.ai-flashcards-page {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.source-selector {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    padding: 1rem;
+}
+
+.file-input-area {
+    border: 2px dashed var(--border);
+    border-radius: 8px;
+    padding: 2rem;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color 0.2s;
+
+    &:hover {
+        border-color: var(--accent);
+    }
+
+    &.dragging {
+        border-color: var(--accent);
+        background: var(--canvas-elevated);
+    }
+}
+
+.text-input-area {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+
+    textarea {
+        min-height: 200px;
+        resize: vertical;
+    }
+}
+
+.card-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding: 1rem;
+    overflow-y: auto;
+    flex: 1;
+}
+
+.card-item {
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1rem;
+    background: var(--canvas-elevated);
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+
+    &.approved {
+        border-color: var(--flag-4);
+        background: rgba(76, 175, 80, 0.1);
+    }
+
+    &.rejected {
+        border-color: var(--flag-1);
+        background: rgba(244, 67, 54, 0.1);
+    }
+}
+
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.card-type-badge {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    background: var(--canvas);
+    color: var(--fg-subtle);
+}
+
+.card-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.card-content {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+
+    .front,
+    .back {
+        padding: 0.5rem;
+        background: var(--canvas);
+        border-radius: 4px;
+    }
+
+    .front {
+        font-weight: 500;
+    }
+}
+
+.card-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem;
+
+    .tag {
+        font-size: 0.75rem;
+        padding: 0.125rem 0.375rem;
+        border-radius: 4px;
+        background: var(--canvas);
+        color: var(--fg-subtle);
+    }
+}
+
+.bottom-bar {
+    padding: 1rem;
+    border-top: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--canvas-elevated);
+}
+
+.import-options {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+}
+
+.progress-indicator {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 200px;
+    gap: 1rem;
+}
+
+.spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.error-message {
+    color: var(--flag-1);
+    padding: 1rem;
+    border: 1px solid var(--flag-1);
+    border-radius: 8px;
+    background: rgba(244, 67, 54, 0.1);
+}
+
+.success-message {
+    color: var(--flag-4);
+    padding: 1rem;
+    border: 1px solid var(--flag-4);
+    border-radius: 8px;
+    background: rgba(76, 175, 80, 0.1);
+}
+
+.stats-bar {
+    display: flex;
+    gap: 1rem;
+    padding: 0.5rem 1rem;
+    background: var(--canvas);
+    border-bottom: 1px solid var(--border);
+    font-size: 0.875rem;
+
+    .stat {
+        display: flex;
+        gap: 0.25rem;
+
+        .label {
+            color: var(--fg-subtle);
+        }
+
+        .value {
+            font-weight: 500;
+        }
+    }
+}

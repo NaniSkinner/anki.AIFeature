@@ -182,6 +182,7 @@ class AnkiQt(QMainWindow):
     pm: ProfileManagerType
     web: MainWebView
     bottomWeb: BottomWebView
+    _ai_flashcards_dialog: QDialog | None
 
     def __init__(
         self,
@@ -198,6 +199,7 @@ class AnkiQt(QMainWindow):
         self.col: Collection | None = None
         self.taskman = TaskManager(self)
         self.media_syncer = MediaSyncer(self)
+        self._ai_flashcards_dialog = None
         aqt.mw = self
         self.app = app
         self.pm = profileManager
@@ -1176,6 +1178,7 @@ title="{}" {}>{}</button>""".format(
             ("d", lambda: self.moveToState("deckBrowser")),
             ("s", self.onStudyKey),
             ("a", self.onAddCard),
+            ("g", self.onAIFlashcards),
             ("b", self.onBrowse),
             ("t", self.onStats),
             ("Shift+t", self.onStats),
@@ -1282,6 +1285,11 @@ title="{}" {}>{}</button>""".format(
 
     def onAddCard(self) -> None:
         aqt.dialogs.open("AddCards", self)
+
+    def onAIFlashcards(self) -> None:
+        from aqt.ai_flashcards import open_ai_flashcards
+
+        open_ai_flashcards(self)
 
     def onBrowse(self) -> None:
         aqt.dialogs.open("Browser", self, card=self.reviewer.card)

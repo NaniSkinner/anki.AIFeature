@@ -28,12 +28,12 @@ pub struct ForeignData {
 #[derive(Debug, Clone, PartialEq, Default, Serialize, Deserialize)]
 #[serde(default)]
 pub struct ForeignNote {
-    guid: String,
-    fields: Vec<Option<String>>,
-    tags: Option<Vec<String>>,
-    notetype: NameOrId,
-    deck: NameOrId,
-    cards: Vec<ForeignCard>,
+    pub guid: String,
+    pub fields: Vec<Option<String>>,
+    pub tags: Option<Vec<String>>,
+    pub notetype: NameOrId,
+    pub deck: NameOrId,
+    pub cards: Vec<ForeignCard>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Default, Serialize, Deserialize)]

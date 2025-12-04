@@ -359,6 +359,14 @@ class Toolbar:
                 id="add",
             ),
             self.create_link(
+                "ai_flashcards",
+                # TODO: Use tr.ai_flashcards_toolbar_button() once FTL is generated
+                "Generate",
+                self._aiFlashcardsLinkHandler,
+                tip=tr.actions_shortcut_key(val="G"),
+                id="ai_flashcards",
+            ),
+            self.create_link(
                 "browse",
                 tr.qt_misc_browse(),
                 self._browseLinkHandler,
@@ -443,6 +451,9 @@ class Toolbar:
 
     def _addLinkHandler(self) -> None:
         self.mw.onAddCard()
+
+    def _aiFlashcardsLinkHandler(self) -> None:
+        self.mw.onAIFlashcards()
 
     def _browseLinkHandler(self) -> None:
         self.mw.onBrowse()

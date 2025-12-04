@@ -345,12 +345,11 @@ class Preferences(QDialog):
                     tr.preferences_ai_connection_failed(error=error or "Unknown error")
                 )
 
-        # For now, just do a simple validation of key format
-        # Full API test will be implemented in Phase 2
-        if api_key.startswith("sk-") and len(api_key) > 20:
-            on_done(True)
-        else:
-            on_done(False, "Invalid API key format")
+        # Test the API key with OpenAI
+        from anki.ai_flashcards.openai_client import test_api_key
+
+        success, error = test_api_key(api_key)
+        on_done(success, error)
 
     # Global preferences
     ######################################################################

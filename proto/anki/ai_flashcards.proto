@@ -1,0 +1,189 @@
+// Copyright: Ankitects Pty Ltd and contributors
+// License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
+
+syntax = "proto3";
+
+option java_multiple_files = true;
+
+package anki.ai_flashcards;
+
+import "anki/collection.proto";
+import "anki/generic.proto";
+
+service AIFlashcardsService {
+  // Test OpenAI API connection with provided key
+  rpc TestApiConnection(TestApiConnectionRequest)
+      returns (TestApiConnectionResponse);
+
+  // Estimate cost before generation
+  rpc EstimateCost(EstimateCostRequest) returns (EstimateCostResponse);
+
+  // Generate flashcards from document content
+  rpc GenerateFlashcards(GenerateFlashcardsRequest)
+      returns (GenerateFlashcardsResponse);
+
+  // Regenerate a single rejected card with optional hint
+  rpc RegenerateCard(RegenerateCardRequest) returns (RegenerateCardResponse);
+
+  // Import approved cards to the collection
+  rpc ImportApprovedCards(ImportApprovedCardsRequest)
+      returns (ImportApprovedCardsResponse);
+
+  // Save current session for later resumption
+  rpc SaveSession(SaveSessionRequest) returns (generic.Empty);
+
+  // Load existing session if available
+  rpc LoadSession(generic.Empty) returns (LoadSessionResponse);
+
+  // Clear saved session
+  rpc ClearSession(generic.Empty) returns (generic.Empty);
+}
+
+// Backend-only service (currently empty, inherits all from AIFlashcardsService)
+service BackendAIFlashcardsService {}
+
+// ============================================================================
+// API Connection Testing
+// ============================================================================
+
+message TestApiConnectionRequest {
+  string api_key = 1;
+}
+
+message TestApiConnectionResponse {
+  bool success = 1;
+  string error_message = 2;
+}
+
+// ============================================================================
+// Cost Estimation
+// ============================================================================
+
+message EstimateCostRequest {
+  oneof source {
+    string file_path = 1;
+    string url = 2;
+    string pasted_text = 3;
+  }
+}
+
+message EstimateCostResponse {
+  uint32 estimated_tokens = 1;
+  float estimated_cost_usd = 2;
+  string model = 3;
+}
+
+// ============================================================================
+// Card Generation
+// ============================================================================
+
+message GenerateFlashcardsRequest {
+  oneof source {
+    string file_path = 1;
+    string url = 2;
+    string pasted_text = 3;
+  }
+  uint32 card_limit = 4;
+  // "basic", "basic_reversed", "cloze", or "auto"
+  string preferred_notetype = 5;
+}
+
+// Card type enumeration
+enum CardType {
+  CARD_TYPE_BASIC = 0;
+  CARD_TYPE_BASIC_REVERSED = 1;
+  CARD_TYPE_CLOZE = 2;
+}
+
+// Card status enumeration
+enum CardStatus {
+  CARD_STATUS_PENDING = 0;
+  CARD_STATUS_APPROVED = 1;
+  CARD_STATUS_REJECTED = 2;
+}
+
+// A single generated flashcard
+message GeneratedCard {
+  // Unique ID for tracking this card in the session
+  string id = 1;
+  // Type of card
+  CardType card_type = 2;
+  // Front content (or full cloze text for cloze cards)
+  string front = 3;
+  // Back content (empty for cloze cards)
+  string back = 4;
+  // AI-suggested tags
+  repeated string suggested_tags = 5;
+  // Current status
+  CardStatus status = 6;
+}
+
+message GenerateFlashcardsResponse {
+  repeated GeneratedCard cards = 1;
+  // Source document name for display
+  string source_name = 2;
+  // Actual tokens used
+  uint32 tokens_used = 3;
+  // Actual cost incurred
+  float cost_usd = 4;
+}
+
+// ============================================================================
+// Card Regeneration
+// ============================================================================
+
+message RegenerateCardRequest {
+  // ID of the card to regenerate
+  string card_id = 1;
+  // Optional hint from user about what to improve
+  string context_hint = 2;
+  // The original source text for context
+  string source_text = 3;
+}
+
+message RegenerateCardResponse {
+  GeneratedCard new_card = 1;
+}
+
+// ============================================================================
+// Import
+// ============================================================================
+
+message ImportApprovedCardsRequest {
+  repeated GeneratedCard cards = 1;
+  // Target deck ID
+  int64 target_deck_id = 2;
+  // Additional tags to apply
+  repeated string additional_tags = 3;
+}
+
+message ImportApprovedCardsResponse {
+  collection.OpChanges changes = 1;
+  // Number of cards imported
+  uint32 imported_count = 2;
+  // Number of duplicates found
+  uint32 duplicate_count = 3;
+  // Any errors that occurred
+  repeated string errors = 4;
+}
+
+// ============================================================================
+// Session Persistence
+// ============================================================================
+
+message SaveSessionRequest {
+  repeated GeneratedCard cards = 1;
+  string source_name = 2;
+  // Original source text for regeneration
+  string source_text = 3;
+}
+
+message LoadSessionResponse {
+  bool has_session = 1;
+  repeated GeneratedCard cards = 2;
+  string source_name = 3;
+  // Unix timestamp when session was created
+  int64 created_timestamp = 4;
+  // Original source text for regeneration
+  string source_text = 5;
+}

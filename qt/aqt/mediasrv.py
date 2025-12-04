@@ -354,6 +354,7 @@ def handle_request(pathin: str) -> Response:
 def is_sveltekit_page(path: str) -> bool:
     page_name = path.split("/")[0]
     return page_name in [
+        "ai-flashcards",
         "graphs",
         "congrats",
         "card-info",
@@ -698,6 +699,11 @@ exposed_backend_list = [
     # DeckConfigService
     "get_ignored_before_count",
     "get_retention_workload",
+    # AIFlashcardsService
+    "load_session",
+    "save_session",
+    "clear_session",
+    "import_approved_cards",
 ]
 
 

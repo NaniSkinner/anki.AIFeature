@@ -14,6 +14,7 @@ macro_rules! protobuf {
     };
 }
 
+protobuf!(ai_flashcards, "ai_flashcards");
 protobuf!(ankidroid, "ankidroid");
 protobuf!(ankiweb, "ankiweb");
 protobuf!(backend, "backend");

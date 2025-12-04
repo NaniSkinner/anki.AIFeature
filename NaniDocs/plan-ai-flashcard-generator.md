@@ -90,18 +90,19 @@ message AIFlashcardsConfig {
 
 **Tasks:**
 
-- [ ] Implement `parse_pdf(file_path: str) -> str` using PyMuPDF
-- [ ] Implement `parse_text_file(file_path: str) -> str`
-- [ ] Implement `parse_url(url: str) -> str` using requests + BeautifulSoup
-- [ ] Implement `parse_pasted_text(text: str) -> str` (minimal processing)
-- [ ] Add text chunking for large documents (respect token limits)
-- [ ] Implement `estimate_tokens(text: str) -> int` for cost estimation
+- [x] Implement `parse_pdf(file_path: str) -> str` using PyMuPDF
+- [x] Implement `parse_text_file(file_path: str) -> str`
+- [x] Implement `parse_url(url: str) -> str` using requests + BeautifulSoup
+- [x] Implement `parse_pasted_text(text: str) -> str` (minimal processing)
+- [x] Add text chunking for large documents (respect token limits)
+- [x] Implement `estimate_tokens(text: str) -> int` for cost estimation
 
-**Dependencies to add:**
+**Dependencies added to `pylib/pyproject.toml`:**
 
 - `PyMuPDF` (fitz) for PDF parsing
-- `beautifulsoup4` for HTML parsing
+- `beautifulsoup4` for HTML parsing (already in qt)
 - `tiktoken` for accurate token counting
+- `openai` for API calls
 
 ### 2.3 OpenAI Client
 
@@ -109,13 +110,13 @@ message AIFlashcardsConfig {
 
 **Tasks:**
 
-- [ ] Implement `OpenAIFlashcardClient` class
-- [ ] Add `test_connection(api_key: str) -> bool` for preferences validation
-- [ ] Add `estimate_cost(token_count: int, model: str) -> float`
-- [ ] Implement `generate_flashcards(text: str, config: GenerationConfig) -> list[GeneratedCard]`
-- [ ] Design prompt template for flashcard generation
-- [ ] Parse structured JSON response from OpenAI
-- [ ] Handle rate limiting and errors gracefully
+- [x] Implement `OpenAIFlashcardClient` class
+- [x] Add `test_connection(api_key: str) -> bool` for preferences validation
+- [x] Add `estimate_cost(token_count: int, model: str) -> float`
+- [x] Implement `generate_flashcards(text: str, config: GenerationConfig) -> list[GeneratedCard]`
+- [x] Design prompt template for flashcard generation
+- [x] Parse structured JSON response from OpenAI
+- [x] Handle rate limiting and errors gracefully
 
 **Prompt Engineering:**
 
@@ -149,10 +150,11 @@ Respond in JSON format:
 
 **Tasks:**
 
-- [ ] Define `GenerationConfig` dataclass (limit, notetype preference, source info)
-- [ ] Define `GeneratedCard` dataclass (type, front, back, tags, status)
-- [ ] Define `GenerationSession` dataclass (cards, source, timestamp, session_id)
-- [ ] Define `CardStatus` enum (pending, approved, rejected, regenerating)
+- [x] Define `GenerationConfig` dataclass (limit, notetype preference, source info)
+- [x] Define `GeneratedCard` dataclass (type, front, back, tags, status)
+- [x] Define `GenerationSession` dataclass (cards, source, timestamp, session_id)
+- [x] Define `CardStatus` enum (pending, approved, rejected, regenerating)
+- [x] Define `CostEstimate` dataclass (tokens, cost, model)
 
 ---
 
@@ -173,10 +175,10 @@ Respond in JSON format:
 
 **Tasks:**
 
-- [ ] Define `AIGeneratedCard` struct matching Python model
-- [ ] Implement `parse_openai_response(json: &str) -> Result<Vec<AIGeneratedCard>>`
-- [ ] Handle malformed JSON gracefully (partial recovery)
-- [ ] Validate cloze syntax for cloze-type cards
+- [x] Define `AIGeneratedCard` struct matching Python model
+- [x] Implement `parse_openai_response(json: &str) -> Result<Vec<AIGeneratedCard>>`
+- [x] Handle malformed JSON gracefully (partial recovery)
+- [x] Validate cloze syntax for cloze-type cards
 
 ### 3.3 Content Validator
 
@@ -184,11 +186,11 @@ Respond in JSON format:
 
 **Tasks:**
 
-- [ ] Implement `validate_card(card: &AIGeneratedCard) -> ValidationResult`
-- [ ] Check for empty fields
-- [ ] Validate cloze deletion syntax using existing `rslib/src/cloze.rs`
-- [ ] Sanitize HTML content using existing ammonia integration
-- [ ] Check field length limits
+- [x] Implement `validate_card(card: &AIGeneratedCard) -> ValidationResult`
+- [x] Check for empty fields
+- [x] Validate cloze deletion syntax using regex pattern
+- [x] Sanitize HTML content using existing ammonia integration
+- [x] Check field length limits
 
 ### 3.4 ForeignNote Converter
 
@@ -196,10 +198,10 @@ Respond in JSON format:
 
 **Tasks:**
 
-- [ ] Implement `to_foreign_note(card: &AIGeneratedCard, config: &ImportConfig) -> ForeignNote`
-- [ ] Map card types to appropriate notetype IDs
-- [ ] Apply auto-tags (`ai-generated`, `source::filename`)
-- [ ] Set target deck from user selection
+- [x] Implement `to_foreign_note(card: &AIGeneratedCard, config: &ConvertConfig) -> ForeignNote`
+- [x] Map card types to appropriate notetype names
+- [x] Apply auto-tags (`ai-generated`, `source::filename`)
+- [x] Set target deck from user selection
 
 ---
 
@@ -316,18 +318,19 @@ message LoadSessionResponse {
 
 ### 4.2 Implement Backend Service
 
-**Files to modify:**
+**Files modified:**
 
-- `rslib/src/backend/mod.rs` - Register new service
-- `rslib/src/lib.rs` - Export ai_flashcards module
+- `rslib/proto/src/lib.rs` - Register ai_flashcards protobuf module
+- `rslib/src/lib.rs` - Export ai_flashcards module (already done in Phase 3)
 
 **New file:** `rslib/src/ai_flashcards/service.rs`
 
 **Tasks:**
 
-- [ ] Implement service trait for AIFlashcardsService
-- [ ] Wire up to Python layer for document parsing and API calls
-- [ ] Implement session persistence to profile temp directory
+- [x] Implement service trait for AIFlashcardsService
+- [x] Stub AI operations that delegate to Python layer (test, estimate, generate, regenerate)
+- [x] Implement session persistence (save/load/clear) to collection directory
+- [x] Implement import_approved_cards for importing AI-generated cards
 
 ---
 
@@ -360,7 +363,7 @@ message LoadSessionResponse {
 - [ ] File tab: drag-drop zone + file picker (accept .pdf, .txt)
 - [ ] URL tab: text input with validation
 - [ ] Paste tab: large textarea
-- [ ] Add card limit input (number, default from preferences)
+- [ ] Add card limit input (number, default from preferences)∏
 - [ ] Add note type preference dropdown
 - [ ] Display cost estimate after source is selected
 - [ ] "Generate Cards" button (disabled until source selected and API key configured)

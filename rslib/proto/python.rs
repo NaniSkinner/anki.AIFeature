@@ -228,6 +228,8 @@ col.decks.all_config()
 from typing import *
 
 import anki
+import anki.ai_flashcards_pb2
+import anki.ankihub_pb2
 import anki.ankiweb_pb2
 import anki.backend_pb2
 import anki.card_rendering_pb2
@@ -248,7 +250,6 @@ import anki.search_pb2
 import anki.stats_pb2
 import anki.sync_pb2
 import anki.tags_pb2
-import anki.ankihub_pb2
 
 class RustBackendGenerated:
     def _run_command(self, service: int, method: int, input: Any) -> bytes:
