@@ -125,6 +125,19 @@ impl Collection {
         target_deck_id: DeckId,
         additional_tags: Vec<String>,
     ) -> error::Result<ImportApprovedCardsResponse> {
+        self.transact(Op::Import, |col| {
+            col.import_ai_cards_inner(cards, target_deck_id, additional_tags)
+        })
+        .map(|output| output.output)
+    }
+
+    /// Inner implementation of card import, runs within a transaction
+    fn import_ai_cards_inner(
+        &mut self,
+        cards: Vec<GeneratedCard>,
+        target_deck_id: DeckId,
+        additional_tags: Vec<String>,
+    ) -> error::Result<ImportApprovedCardsResponse> {
         let mut imported_count = 0u32;
         let mut duplicate_count = 0u32;
         let mut errors: Vec<String> = Vec::new();
@@ -209,11 +222,48 @@ impl Collection {
     }
 
     /// Import a single note, returning whether it was a duplicate
-    fn import_single_ai_note(&mut self, _note: ForeignNote) -> error::Result<bool> {
-        // TODO: Implement actual import using existing import infrastructure
-        // For now, return success (not a duplicate)
-        // The actual implementation should use the ForeignData import mechanism
-        Ok(false)
+    fn import_single_ai_note(&mut self, foreign_note: ForeignNote) -> error::Result<bool> {
+        use crate::notes::Note;
+
+        // Get the notetype by name
+        let notetype_name = match &foreign_note.notetype {
+            NameOrId::Name(name) => name.clone(),
+            NameOrId::Id(id) => id.to_string(),
+        };
+
+        let notetype = self
+            .get_notetype_by_name(&notetype_name)?
+            .or_not_found(notetype_name)?;
+
+        // Get deck ID
+        let deck_id = match &foreign_note.deck {
+            NameOrId::Id(id) => DeckId(*id),
+            NameOrId::Name(name) => self.get_deck_id(name)?.or_not_found(name)?,
+        };
+
+        // Create a new note with the notetype
+        let mut note = Note::new(&notetype);
+
+        // Set the fields
+        for (idx, field_opt) in foreign_note.fields.iter().enumerate() {
+            if let Some(field_content) = field_opt {
+                if idx < note.fields().len() {
+                    note.set_field(idx, field_content.clone())?;
+                }
+            }
+        }
+
+        // Set tags
+        if let Some(tags) = foreign_note.tags {
+            note.tags = tags;
+        }
+
+        // Add the note (this also generates cards)
+        self.add_note_inner(&mut note, deck_id)?;
+
+        // Note: Duplicate detection could be added here by checking checksums
+        // before adding. For now, we always add the note.
+        Ok(false) // Not a duplicate
     }
 
     /// Save AI session to disk
