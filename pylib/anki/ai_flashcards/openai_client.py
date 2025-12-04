@@ -18,7 +18,7 @@ from anki.ai_flashcards.models import (
 )
 
 # OpenAI model configuration
-DEFAULT_MODEL = "gpt-4o-mini"
+DEFAULT_MODEL = "gpt-4o"
 # Pricing per 1M tokens (as of late 2024)
 MODEL_PRICING = {
     "gpt-4o-mini": {"input": 0.15, "output": 0.60},
@@ -26,29 +26,66 @@ MODEL_PRICING = {
     "gpt-4-turbo": {"input": 10.00, "output": 30.00},
 }
 
-SYSTEM_PROMPT = """You are an expert educator creating Anki flashcards.
-Generate flashcards from the provided text following these rules:
+SYSTEM_PROMPT = """### ROLE ###
+You are an expert in cognitive science and learning theory, specializing in creating optimal study materials for spaced repetition systems like Anki. Your goal is to generate high-quality, effective flashcards that maximize long-term retention.
 
-1. Create clear, atomic cards (one concept per card)
-2. For definitions and simple facts, use "basic" format
-3. For vocabulary, terminology, or concepts that benefit from bidirectional learning, use "basic_reversed" format
-4. For processes, sequences, lists, or fill-in-the-blank content, use "cloze" format
-5. Ensure answers are concise but complete
-6. Include context when the question would be ambiguous without it
-7. For cloze cards, use {{c1::text}} syntax for deletions. Use multiple cloze numbers (c1, c2, etc.) only when testing different concepts in the same sentence.
+### RULES OF FORMULATION ###
+Apply these cognitive science principles to every card:
 
+1. **Minimum Information Principle**: Each card must be ATOMIC, testing only ONE discrete piece of information. Break complex concepts into their simplest possible components. This minimizes cognitive load and maximizes retention.
+
+2. **Force Active Recall**: Questions must require active retrieval, not recognition. Use open-ended questions (What, Why, How) rather than simple fill-in-the-blank. The learner should have to think, not just recognize.
+
+3. **Conciseness & Clarity**: Use the shortest possible questions and even shorter answers. Eliminate every unnecessary word. Never repeat the question's phrasing in the answer.
+
+4. **Focus on Key Concepts**: Test the MOST important and central concepts, not peripheral details or trivia.
+
+5. **Independence**: Each card must be understandable on its own without the source text. Never refer to "the article" or "the author."
+
+6. **Desirable Difficulty**: Cards should be challenging but answerable—hard enough to require effort, but not so obscure they cause frustration.
+
+### CARD TYPE GUIDELINES ###
+- **"basic"**: For definitions, simple facts, and conceptual questions. Use open-ended questions.
+- **"basic_reversed"**: For vocabulary, terminology, or concepts that benefit from bidirectional learning (knowing both term→definition and definition→term).
+- **"cloze"**: For processes, sequences, formulas, or when testing specific terms in context. Use {{c1::text}} syntax. Use multiple cloze numbers (c1, c2, etc.) only when testing different concepts in the same sentence.
+
+### EXAMPLES OF GOOD VS. BAD CARDS ###
+
+**Example 1: From a text about the Dead Sea**
+- ❌ BAD (Too Complex):
+  - Front: "What are the characteristics of the Dead Sea?"
+  - Back: "It's a salt lake on the border of Israel and Jordan, its shoreline is the lowest point on Earth, it's 74km long, and it's 7 times saltier than the ocean."
+- ✅ GOOD (Atomic & Concise):
+  - Front: "Why can swimmers float easily in the Dead Sea?"
+  - Back: "High salt content increases water density."
+
+**Example 2: From a text about photosynthesis**
+- ❌ BAD (Too Broad):
+  - Front: "What is photosynthesis and how does it work?"
+  - Back: "Photosynthesis is a process used by plants to convert light energy into chemical energy stored in glucose."
+- ✅ GOOD (Specific & Forces Recall):
+  - Front: "What are the two primary outputs of photosynthesis?"
+  - Back: "Glucose and oxygen."
+
+**Example 3: Cloze card**
+- ❌ BAD (Testing trivia):
+  - Front: "The mitochondria was discovered in {{c1::1857}}."
+- ✅ GOOD (Testing key concept):
+  - Front: "The {{c1::mitochondria}} is the organelle responsible for producing ATP through cellular respiration."
+
+### OUTPUT FORMAT ###
 Respond ONLY with valid JSON in this exact format:
 {
   "cards": [
     {
       "type": "basic",
       "front": "What is X?",
-      "back": "X is Y",
+      "back": "Y",
       "suggested_tags": ["topic1", "topic2"]
     },
     {
       "type": "cloze",
-      "front": "The {{c1::mitochondria}} is the powerhouse of the cell",
+      "front": "The {{c1::mitochondria}} produces ATP.",
       "back": "",
       "suggested_tags": ["biology", "cell"]
     }
@@ -59,7 +96,6 @@ Important:
 - "type" must be one of: "basic", "basic_reversed", "cloze"
 - For cloze cards, "back" should be empty string
 - suggested_tags should be lowercase, no spaces (use underscores)
-- Create high-quality cards that test understanding, not just memorization
 """
 
 
@@ -228,19 +264,29 @@ class OpenAIFlashcardClient:
         except ImportError as e:
             raise OpenAIError("OpenAI library not installed") from e
 
-        prompt = f"""Based on this source text, create ONE new flashcard to replace the rejected one.
+        user_feedback = f"- **User Feedback**: {hint}" if hint else ""
 
-Source text excerpt:
+        prompt = f"""### TASK ###
+Create ONE new, high-quality flashcard to replace a rejected card. The new card must be superior and adhere strictly to the Rules of Formulation, especially the Minimum Information Principle.
+
+### REJECTION CONTEXT ###
+- **Rejected Card Type**: {original_card.card_type.value}
+- **Rejected Card Front**: "{original_card.front}"
+- **Rejected Card Back**: "{original_card.back}"
+{user_feedback}
+
+### SOURCE TEXT EXCERPT ###
 {source_text[:2000]}
 
-The previous card was rejected:
-- Type: {original_card.card_type.value}
-- Front: {original_card.front}
-- Back: {original_card.back}
+### EXAMPLES OF IMPROVEMENT ###
 
-{"User feedback: " + hint if hint else ""}
+**Example: Fixing a card that's too complex**
+- ❌ REJECTED: "What are the characteristics of the Dead Sea?" → "It's a salt lake, lowest point on Earth, 74km long, 7x saltier than ocean."
+- ✅ IMPROVED: "Why can swimmers float easily in the Dead Sea?" → "High salt content increases water density."
 
-Create a better card covering similar content. Respond with JSON containing exactly one card."""
+### OUTPUT FORMAT ###
+Respond with valid JSON containing exactly one card:
+{{"cards": [{{"type": "basic", "front": "...", "back": "...", "suggested_tags": [...]}}]}}"""
 
         client = openai.OpenAI(api_key=self.api_key)
 
@@ -272,19 +318,23 @@ Create a better card covering similar content. Respond with JSON containing exac
 
     def _build_user_prompt(self, text: str, config: GenerationConfig) -> str:
         """Build the user prompt for card generation."""
-        parts = [
-            f"Generate up to {config.card_limit} flashcards from the following text.",
-        ]
+        parts = ["### TASK ###"]
+        parts.append(
+            f"Generate up to {config.card_limit} high-quality flashcards from the "
+            "source text below. Apply the Rules of Formulation strictly—prioritize "
+            "the Minimum Information Principle above all else."
+        )
 
         if config.preferred_card_type:
             parts.append(
-                f"Prefer {config.preferred_card_type.value} format when appropriate."
+                f"\nPrefer '{config.preferred_card_type.value}' card type when "
+                "appropriate for the content."
             )
 
         if config.source_name:
-            parts.append(f"Source: {config.source_name}")
+            parts.append(f"\nSource context: {config.source_name}")
 
-        parts.append("\n---\n")
+        parts.append("\n\n### SOURCE TEXT ###")
         parts.append(text)
 
         return "\n".join(parts)

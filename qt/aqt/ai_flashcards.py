@@ -137,6 +137,7 @@ class AIFlashcardsDialog(QDialog):
         except Exception as e:
             print(f"[AI Flashcards] Error in background task: {e}")
             import traceback
+
             traceback.print_exc()
             return {"success": False, "error": str(e)}
 
@@ -223,6 +224,7 @@ class AIFlashcardsDialog(QDialog):
         except Exception as e:
             print(f"[AI Flashcards] _get_api_key exception: {e}")
             import traceback
+
             traceback.print_exc()
             return None
 

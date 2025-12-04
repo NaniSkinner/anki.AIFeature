@@ -133,12 +133,19 @@ License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
                         const result = JSON.parse(response);
                         // If immediate error (like missing API key), reject now
                         if (result.error) {
-                            console.error("[AIFlashcardsPage] Immediate error:", result.error);
+                            console.error(
+                                "[AIFlashcardsPage] Immediate error:",
+                                result.error,
+                            );
                             pendingGenerateResolve = null;
                             pendingGenerateReject = null;
                             reject(new Error(result.error));
                         } else {
-                            console.log("[AIFlashcardsPage] Status:", result.status, "- waiting for callback");
+                            console.log(
+                                "[AIFlashcardsPage] Status:",
+                                result.status,
+                                "- waiting for callback",
+                            );
                         }
                         // If status is "generating", wait for _aiFlashcardsOnGenerate callback
                         // (resolve/reject will be called by the global callback)
