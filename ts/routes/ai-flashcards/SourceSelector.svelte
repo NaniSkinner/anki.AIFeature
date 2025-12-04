@@ -4,18 +4,24 @@ License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 -->
 <script lang="ts">
     import { createEventDispatcher } from "svelte";
+    import { bridgeCommand } from "@tslib/bridgecommand";
 
     import TitledContainer from "$lib/components/TitledContainer.svelte";
     import Row from "$lib/components/Row.svelte";
 
     const dispatch = createEventDispatcher<{
-        generate: { text: string; name: string };
+        generate: { text: string; name: string; url: string };
     }>();
 
+    // Props for restoring state when returning from error
+    export let initialText = "";
+    export let initialSourceName = "";
+    export let initialUrl = "";
+
     let sourceType: "file" | "text" | "url" = "text";
-    let textInput = "";
-    let urlInput = "";
-    let sourceName = "";
+    let textInput = initialText;
+    let urlInput = initialUrl;
+    let sourceName = initialSourceName;
     let fileInput: HTMLInputElement;
     let dragging = false;
     let isLoading = false;
@@ -75,10 +81,11 @@ License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
         error = null;
 
         try {
-            // URL fetching will be handled by Python backend
-            // For now, show a placeholder
-            sourceName = urlInput;
-            error = "URL fetching is not yet implemented.";
+            // Call Python backend to fetch and parse URL content
+            const result = await fetchUrlViaBackend(urlInput.trim());
+            textInput = result.text;
+            sourceName = result.sourceName || urlInput;
+            sourceType = "text"; // Switch to text tab to show the fetched content
         } catch (e) {
             error = e instanceof Error ? e.message : String(e);
         } finally {
@@ -86,15 +93,49 @@ License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
         }
     }
 
+    async function fetchUrlViaBackend(
+        url: string,
+    ): Promise<{ text: string; sourceName: string }> {
+        return new Promise((resolve, reject) => {
+            const request = {
+                action: "fetch_url",
+                url,
+            };
+
+            bridgeCommand<string>(
+                `ai_flashcards:${JSON.stringify(request)}`,
+                (response: string) => {
+                    try {
+                        const result = JSON.parse(response);
+                        if (result.error) {
+                            reject(new Error(result.error));
+                        } else {
+                            resolve({
+                                text: result.text || "",
+                                sourceName: result.sourceName || url,
+                            });
+                        }
+                    } catch (e) {
+                        reject(e);
+                    }
+                },
+            );
+        });
+    }
+
     function handleGenerate() {
+        console.log("[SourceSelector] handleGenerate called");
+        console.log("[SourceSelector] textInput length:", textInput.length);
         if (!textInput.trim()) {
             error = "Please provide text to generate flashcards from.";
             return;
         }
 
+        console.log("[SourceSelector] Dispatching generate event");
         dispatch("generate", {
             text: textInput,
             name: sourceName || "Untitled",
+            url: urlInput,
         });
     }
 

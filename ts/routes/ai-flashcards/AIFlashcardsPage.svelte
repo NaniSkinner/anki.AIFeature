@@ -16,9 +16,28 @@ License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
     import CardReview from "./CardReview.svelte";
     import Header from "./Header.svelte";
 
-    // Signal to Python that the page is ready
+    // Variables for async generation callback
+    let pendingGenerateResolve: ((cards: SimpleCard[]) => void) | null = null;
+    let pendingGenerateReject: ((error: Error) => void) | null = null;
+
+    // Signal to Python that the page is ready and set up async callback
     onMount(() => {
         bridgeCommand(`ai_flashcards:${JSON.stringify({ action: "ready" })}`);
+
+        // Register global callback for Python to call when generation completes
+        // This is needed because OpenAI API call runs in background thread
+        (window as any)._aiFlashcardsOnGenerate = (result: {
+            cards?: SimpleCard[];
+            error?: string;
+        }) => {
+            if (result.error) {
+                pendingGenerateReject?.(new Error(result.error));
+            } else {
+                pendingGenerateResolve?.(result.cards || []);
+            }
+            pendingGenerateResolve = null;
+            pendingGenerateReject = null;
+        };
     });
 
     // Simple card interface matching our proto
@@ -48,6 +67,7 @@ License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
     let cards: SimpleCard[] = session.hasSession ? session.cards : [];
     let sourceName = session.sourceName || "";
     let sourceText = session.sourceText || "";
+    let sourceUrl = "";
     let selectedDeckId = decks.entries[0]?.id || 0n;
     let error: string | null = null;
     let importResult: { imported: number; duplicates: number } | null = null;
@@ -56,15 +76,20 @@ License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
     $: rejectedCount = cards.filter((c) => c.status === 2).length;
     $: pendingCount = cards.filter((c) => c.status === 0).length;
 
-    async function handleGenerate(text: string, name: string) {
+    async function handleGenerate(text: string, name: string, url: string) {
+        console.log("[AIFlashcardsPage] handleGenerate called");
+        console.log("[AIFlashcardsPage] text length:", text.length, "name:", name);
         sourceText = text;
         sourceName = name;
+        sourceUrl = url;
         currentStep = "generating";
         error = null;
 
         try {
             // Call Python backend for generation (via pycmd bridge)
+            console.log("[AIFlashcardsPage] Calling generateFlashcardsViaBackend");
             const generatedCards = await generateFlashcardsViaBackend(text, name);
+            console.log("[AIFlashcardsPage] Received cards:", generatedCards.length);
             cards = generatedCards;
             currentStep = "review";
 
@@ -75,6 +100,7 @@ License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
                 cards: cards as any,
             });
         } catch (e) {
+            console.error("[AIFlashcardsPage] Error in handleGenerate:", e);
             error = e instanceof Error ? e.message : String(e);
             currentStep = "source";
         }
@@ -84,30 +110,56 @@ License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
         text: string,
         name: string,
     ): Promise<SimpleCard[]> {
+        console.log("[AIFlashcardsPage] generateFlashcardsViaBackend called");
         // This will call the Python layer via bridgeCommand
-        // The Python layer handles the actual OpenAI API call
+        // The Python layer runs OpenAI API in background thread and calls
+        // window._aiFlashcardsOnGenerate when done
         return new Promise((resolve, reject) => {
+            pendingGenerateResolve = resolve;
+            pendingGenerateReject = reject;
+
             const request = {
                 action: "generate_flashcards",
                 text,
                 sourceName: name,
             };
 
+            console.log("[AIFlashcardsPage] Sending bridgeCommand");
             bridgeCommand<string>(
                 `ai_flashcards:${JSON.stringify(request)}`,
                 (response: string) => {
+                    console.log("[AIFlashcardsPage] bridgeCommand response:", response);
                     try {
                         const result = JSON.parse(response);
+                        // If immediate error (like missing API key), reject now
                         if (result.error) {
+                            console.error("[AIFlashcardsPage] Immediate error:", result.error);
+                            pendingGenerateResolve = null;
+                            pendingGenerateReject = null;
                             reject(new Error(result.error));
                         } else {
-                            resolve(result.cards || []);
+                            console.log("[AIFlashcardsPage] Status:", result.status, "- waiting for callback");
                         }
+                        // If status is "generating", wait for _aiFlashcardsOnGenerate callback
+                        // (resolve/reject will be called by the global callback)
                     } catch (e) {
+                        console.error("[AIFlashcardsPage] Error parsing response:", e);
+                        pendingGenerateResolve = null;
+                        pendingGenerateReject = null;
                         reject(e);
                     }
                 },
             );
+
+            // Timeout after 2 minutes
+            setTimeout(() => {
+                if (pendingGenerateResolve) {
+                    console.error("[AIFlashcardsPage] Generation timed out");
+                    pendingGenerateResolve = null;
+                    pendingGenerateReject = null;
+                    reject(new Error("Generation timed out after 2 minutes"));
+                }
+            }, 120000);
         });
     }
 
@@ -187,7 +239,11 @@ License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
     {#if currentStep === "source"}
         <Container breakpoint="md">
             <SourceSelector
-                on:generate={(e) => handleGenerate(e.detail.text, e.detail.name)}
+                initialText={sourceText}
+                initialSourceName={sourceName}
+                initialUrl={sourceUrl}
+                on:generate={(e) =>
+                    handleGenerate(e.detail.text, e.detail.name, e.detail.url)}
             />
         </Container>
     {:else if currentStep === "generating"}

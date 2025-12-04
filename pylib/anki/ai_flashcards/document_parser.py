@@ -153,17 +153,108 @@ def parse_url(url: str) -> str:
 
         soup = BeautifulSoup(html_content, "html.parser")
 
-        # Remove script and style elements
-        for element in soup(["script", "style", "nav", "footer", "header"]):
-            element.decompose()
+        # Remove unwanted elements that typically contain non-content
+        unwanted_selectors = [
+            "script",
+            "style",
+            "nav",
+            "footer",
+            "header",
+            "aside",
+            "noscript",
+            "iframe",
+            "form",
+            "[role='navigation']",
+            "[role='banner']",
+            "[role='contentinfo']",
+            ".sidebar",
+            ".menu",
+            ".navigation",
+            ".nav",
+            ".footer",
+            ".header",
+            ".advertisement",
+            ".ad",
+            ".social-share",
+            ".comments",
+            "#sidebar",
+            "#menu",
+            "#navigation",
+            "#nav",
+            "#footer",
+            "#header",
+        ]
+        for selector in unwanted_selectors:
+            for element in soup.select(selector):
+                element.decompose()
 
-        # Try to find main content area
-        main_content = (
-            soup.find("main")
-            or soup.find("article")
-            or soup.find(class_=re.compile(r"content|article|post", re.I))
-            or soup.find("body")
-        )
+        # Try to find main content area with multiple strategies
+        main_content = None
+
+        # Strategy 1: Look for semantic HTML5 elements
+        main_content = soup.find("main") or soup.find("article")
+
+        # Strategy 2: Look for common content container IDs
+        if not main_content:
+            for content_id in [
+                "content",
+                "main-content",
+                "main",
+                "article",
+                "post",
+                "entry",
+                "page-content",
+                "body-content",
+            ]:
+                main_content = soup.find(id=content_id)
+                if main_content:
+                    break
+
+        # Strategy 3: Look for common content container classes
+        if not main_content:
+            for content_class in [
+                "content",
+                "main-content",
+                "article-content",
+                "post-content",
+                "entry-content",
+                "page-content",
+                "article-body",
+                "post-body",
+            ]:
+                main_content = soup.find(class_=content_class)
+                if main_content:
+                    break
+
+        # Strategy 4: Look for role="main"
+        if not main_content:
+            main_content = soup.find(attrs={"role": "main"})
+
+        # Strategy 5: Find the largest text container
+        if not main_content:
+            # Fall back to finding the div with the most paragraph content
+            from bs4 import Tag
+
+            divs_with_paragraphs: list[tuple[Tag, int]] = []
+            for div in soup.find_all("div"):
+                if isinstance(div, Tag):
+                    paragraphs = div.find_all("p", recursive=True)
+                    if paragraphs:
+                        total_text = sum(
+                            len(p.get_text(strip=True))
+                            for p in paragraphs
+                            if isinstance(p, Tag)
+                        )
+                        divs_with_paragraphs.append((div, total_text))
+
+            if divs_with_paragraphs:
+                # Sort by text length and take the one with most content
+                divs_with_paragraphs.sort(key=lambda x: x[1], reverse=True)
+                main_content = divs_with_paragraphs[0][0]
+
+        # Strategy 6: Fall back to body
+        if not main_content:
+            main_content = soup.find("body")
 
         if main_content:
             text = main_content.get_text(separator="\n", strip=True)
