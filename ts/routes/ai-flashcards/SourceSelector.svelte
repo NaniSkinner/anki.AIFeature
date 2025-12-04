@@ -13,6 +13,12 @@ License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
         generate: { text: string; name: string; url: string };
     }>();
 
+    interface CostEstimate {
+        estimated_tokens: number;
+        estimated_cost_usd: number;
+        model: string;
+    }
+
     // Props for restoring state when returning from error
     export let initialText = "";
     export let initialSourceName = "";
@@ -25,7 +31,9 @@ License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
     let fileInput: HTMLInputElement;
     let dragging = false;
     let isLoading = false;
+    let isEstimating = false;
     let error: string | null = null;
+    let costEstimate: CostEstimate | null = null;
 
     async function handleFileSelect(event: Event) {
         const input = event.target as HTMLInputElement;
@@ -139,6 +147,44 @@ License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
         });
     }
 
+    async function handleEstimateCost() {
+        if (!textInput.trim()) {
+            error = "Please provide text to estimate cost.";
+            return;
+        }
+
+        isEstimating = true;
+        error = null;
+        costEstimate = null;
+
+        try {
+            const request = {
+                action: "estimate_cost",
+                text: textInput,
+            };
+
+            bridgeCommand<string>(
+                `ai_flashcards:${JSON.stringify(request)}`,
+                (response: string) => {
+                    try {
+                        const result = JSON.parse(response);
+                        if (result.error) {
+                            error = result.error;
+                        } else {
+                            costEstimate = result as CostEstimate;
+                        }
+                    } catch (e) {
+                        error = "Failed to parse cost estimate response";
+                    }
+                    isEstimating = false;
+                },
+            );
+        } catch (e) {
+            error = e instanceof Error ? e.message : String(e);
+            isEstimating = false;
+        }
+    }
+
     function handleDragOver(event: DragEvent) {
         event.preventDefault();
         dragging = true;
@@ -249,6 +295,13 @@ License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 
     <div class="generate-button-container">
         <button
+            class="btn"
+            disabled={!textInput.trim() || isLoading || isEstimating}
+            on:click={handleEstimateCost}
+        >
+            {isEstimating ? "Estimating..." : "Estimate Cost"}
+        </button>
+        <button
             class="btn btn-primary btn-lg"
             disabled={!textInput.trim() || isLoading}
             on:click={handleGenerate}
@@ -256,6 +309,13 @@ License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
             Generate Flashcards
         </button>
     </div>
+
+    {#if costEstimate}
+        <div class="cost-estimate">
+            Estimated: ~${costEstimate.estimated_cost_usd.toFixed(4)} ({costEstimate.model},
+            ~{costEstimate.estimated_tokens.toLocaleString()} tokens)
+        </div>
+    {/if}
 </div>
 
 <style lang="scss">
@@ -328,11 +388,22 @@ License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
     .generate-button-container {
         display: flex;
         justify-content: center;
+        gap: 0.5rem;
         margin-top: 1rem;
 
         .btn-lg {
             padding: 0.75rem 2rem;
             font-size: 1.1rem;
         }
+    }
+
+    .cost-estimate {
+        text-align: center;
+        margin-top: 0.75rem;
+        padding: 0.5rem 1rem;
+        background: var(--canvas-inset);
+        border-radius: 4px;
+        font-size: 0.9rem;
+        color: var(--fg-subtle);
     }
 </style>

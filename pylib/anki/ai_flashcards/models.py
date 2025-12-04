@@ -147,3 +147,22 @@ class CostEstimate:
             "estimated_cost_usd": self.estimated_cost_usd,
             "model": self.model,
         }
+
+
+@dataclass
+class GenerationResult:
+    """Result of flashcard generation including cards and cost data."""
+
+    cards: list[GeneratedCard]
+    tokens_used: int
+    cost_usd: float
+    model: str
+
+    def to_dict(self) -> dict[str, Any]:
+        """Convert to dictionary."""
+        return {
+            "cards": [card.to_dict() for card in self.cards],
+            "tokens_used": self.tokens_used,
+            "cost_usd": self.cost_usd,
+            "model": self.model,
+        }

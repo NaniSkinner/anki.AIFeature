@@ -67,6 +67,8 @@ class AIFlashcardsDialog(QDialog):
                 return json.dumps({"ok": True})
             elif action == "generate_flashcards":
                 return self._handle_generate(request)
+            elif action == "estimate_cost":
+                return self._handle_estimate_cost(request)
             elif action == "fetch_url":
                 return self._handle_fetch_url(request)
             elif action == "test_connection":
@@ -130,10 +132,16 @@ class AIFlashcardsDialog(QDialog):
             )
 
             print("[AI Flashcards] Calling generate_flashcards")
-            cards = client.generate_flashcards(text, config)
-            print(f"[AI Flashcards] Generated {len(cards)} cards")
+            result = client.generate_flashcards(text, config)
+            print(f"[AI Flashcards] Generated {len(result.cards)} cards")
 
-            return {"success": True, "cards": cards}
+            return {
+                "success": True,
+                "cards": result.cards,
+                "tokens_used": result.tokens_used,
+                "cost_usd": result.cost_usd,
+                "model": result.model,
+            }
         except Exception as e:
             print(f"[AI Flashcards] Error in background task: {e}")
             import traceback
@@ -164,7 +172,14 @@ class AIFlashcardsDialog(QDialog):
                     }
                     for card in result["cards"]
                 ]
-                response = json.dumps({"cards": cards_json})
+                response = json.dumps(
+                    {
+                        "cards": cards_json,
+                        "tokens_used": result.get("tokens_used", 0),
+                        "cost_usd": result.get("cost_usd", 0),
+                        "model": result.get("model", ""),
+                    }
+                )
                 print(f"[AI Flashcards] Sending {len(cards_json)} cards to frontend")
             else:
                 response = json.dumps({"error": result["error"]})
@@ -194,6 +209,23 @@ class AIFlashcardsDialog(QDialog):
 
         except Exception as e:
             return json.dumps({"error": f"Failed to fetch URL: {e}"})
+
+    def _handle_estimate_cost(self, request: dict[str, Any]) -> str:
+        """Handle cost estimation request."""
+        text = request.get("text", "")
+
+        if not text.strip():
+            return json.dumps({"error": "No text provided for estimation."})
+
+        try:
+            from anki.ai_flashcards.openai_client import OpenAIFlashcardClient
+
+            # We don't need a valid API key for estimation, just use a placeholder
+            client = OpenAIFlashcardClient("estimation-only")
+            estimate = client.estimate_cost(text)
+            return json.dumps(estimate.to_dict())
+        except Exception as e:
+            return json.dumps({"error": f"Failed to estimate cost: {e}"})
 
     def _handle_test_connection(self) -> str:
         """Test the OpenAI API connection."""

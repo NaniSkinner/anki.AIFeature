@@ -15,6 +15,7 @@ from anki.ai_flashcards.models import (
     CostEstimate,
     GeneratedCard,
     GenerationConfig,
+    GenerationResult,
 )
 
 # OpenAI model configuration
@@ -173,7 +174,7 @@ class OpenAIFlashcardClient:
         self,
         text: str,
         config: GenerationConfig,
-    ) -> list[GeneratedCard]:
+    ) -> GenerationResult:
         """Generate flashcards from the given text.
 
         Args:
@@ -181,7 +182,7 @@ class OpenAIFlashcardClient:
             config: Generation configuration
 
         Returns:
-            List of generated flashcard objects
+            GenerationResult with cards and cost data
 
         Raises:
             OpenAIError: If generation fails
@@ -193,12 +194,11 @@ class OpenAIFlashcardClient:
                 "OpenAI library not installed. Run: pip install openai"
             ) from e
 
-        # Build the user prompt
-        user_prompt = self._build_user_prompt(text, config)
-
         # Chunk text if needed
         chunks = chunk_text(text)
         all_cards: list[GeneratedCard] = []
+        total_prompt_tokens = 0
+        total_completion_tokens = 0
 
         client = openai.OpenAI(api_key=self.api_key)
 
@@ -230,6 +230,11 @@ class OpenAIFlashcardClient:
                     response_format={"type": "json_object"},
                 )
 
+                # Track token usage
+                if response.usage:
+                    total_prompt_tokens += response.usage.prompt_tokens
+                    total_completion_tokens += response.usage.completion_tokens
+
                 content = response.choices[0].message.content
                 if content:
                     cards = self._parse_response(content, config)
@@ -238,7 +243,20 @@ class OpenAIFlashcardClient:
             except openai.APIError as e:
                 raise OpenAIError(f"API error: {e}") from e
 
-        return all_cards[: config.card_limit]
+        # Calculate actual cost
+        pricing = MODEL_PRICING.get(self.model, MODEL_PRICING[DEFAULT_MODEL])
+        total_tokens = total_prompt_tokens + total_completion_tokens
+        cost_usd = (
+            total_prompt_tokens * pricing["input"]
+            + total_completion_tokens * pricing["output"]
+        ) / 1_000_000
+
+        return GenerationResult(
+            cards=all_cards[: config.card_limit],
+            tokens_used=total_tokens,
+            cost_usd=round(cost_usd, 6),
+            model=self.model,
+        )
 
     def regenerate_card(
         self,

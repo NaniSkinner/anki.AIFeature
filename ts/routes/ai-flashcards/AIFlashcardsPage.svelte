@@ -17,8 +17,16 @@ License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
     import Header from "./Header.svelte";
 
     // Variables for async generation callback
-    let pendingGenerateResolve: ((cards: SimpleCard[]) => void) | null = null;
+    let pendingGenerateResolve: ((result: GenerationResponse) => void) | null = null;
     let pendingGenerateReject: ((error: Error) => void) | null = null;
+
+    // Generation response includes cards and cost data
+    interface GenerationResponse {
+        cards: SimpleCard[];
+        tokens_used?: number;
+        cost_usd?: number;
+        model?: string;
+    }
 
     // Signal to Python that the page is ready and set up async callback
     onMount(() => {
@@ -28,12 +36,20 @@ License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
         // This is needed because OpenAI API call runs in background thread
         (window as any)._aiFlashcardsOnGenerate = (result: {
             cards?: SimpleCard[];
+            tokens_used?: number;
+            cost_usd?: number;
+            model?: string;
             error?: string;
         }) => {
             if (result.error) {
                 pendingGenerateReject?.(new Error(result.error));
             } else {
-                pendingGenerateResolve?.(result.cards || []);
+                pendingGenerateResolve?.({
+                    cards: result.cards || [],
+                    tokens_used: result.tokens_used,
+                    cost_usd: result.cost_usd,
+                    model: result.model,
+                });
             }
             pendingGenerateResolve = null;
             pendingGenerateReject = null;
@@ -71,6 +87,8 @@ License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
     let selectedDeckId = decks.entries[0]?.id || 0n;
     let error: string | null = null;
     let importResult: { imported: number; duplicates: number } | null = null;
+    let actualCost: { tokens_used: number; cost_usd: number; model: string } | null =
+        null;
 
     $: approvedCount = cards.filter((c) => c.status === 1).length;
     $: rejectedCount = cards.filter((c) => c.status === 2).length;
@@ -84,14 +102,24 @@ License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
         sourceUrl = url;
         currentStep = "generating";
         error = null;
+        actualCost = null;
 
         try {
             // Call Python backend for generation (via pycmd bridge)
             console.log("[AIFlashcardsPage] Calling generateFlashcardsViaBackend");
-            const generatedCards = await generateFlashcardsViaBackend(text, name);
-            console.log("[AIFlashcardsPage] Received cards:", generatedCards.length);
-            cards = generatedCards;
+            const result = await generateFlashcardsViaBackend(text, name);
+            console.log("[AIFlashcardsPage] Received cards:", result.cards.length);
+            cards = result.cards;
             currentStep = "review";
+
+            // Store actual cost data
+            if (result.cost_usd !== undefined && result.tokens_used !== undefined) {
+                actualCost = {
+                    tokens_used: result.tokens_used,
+                    cost_usd: result.cost_usd,
+                    model: result.model || "",
+                };
+            }
 
             // Save session for persistence
             await saveSession({
@@ -109,7 +137,7 @@ License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
     async function generateFlashcardsViaBackend(
         text: string,
         name: string,
-    ): Promise<SimpleCard[]> {
+    ): Promise<GenerationResponse> {
         console.log("[AIFlashcardsPage] generateFlashcardsViaBackend called");
         // This will call the Python layer via bridgeCommand
         // The Python layer runs OpenAI API in background thread and calls
@@ -274,6 +302,12 @@ License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
                 <span class="label">Rejected:</span>
                 <span class="value">{rejectedCount}</span>
             </div>
+            {#if actualCost}
+                <div class="stat cost">
+                    <span class="label">Cost:</span>
+                    <span class="value">${actualCost.cost_usd.toFixed(4)}</span>
+                </div>
+            {/if}
         </div>
 
         {#if error}
