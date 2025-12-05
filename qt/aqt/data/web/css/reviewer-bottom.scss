@@ -4,6 +4,7 @@
 @use "../../../../../ts/lib/sass/root-vars";
 @use "../../../../../ts/lib/sass/vars" as *;
 @use "../../../../../ts/lib/sass/card-counts";
+@use "../../../../../ts/lib/sass/elevation" as *;
 
 :root {
     --focus-color: #{palette-of(border-focus)};
@@ -15,27 +16,55 @@
 
 body {
     margin: 0;
-    padding: 0;
+    padding: var(--spacing-md);
+    background: transparent;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
 }
 
 #middle td[align="center"] {
-    padding-top: 10px;
+    padding-top: var(--spacing-md);
     position: relative;
 }
 
 button {
-    min-width: 60px;
+    min-width: 70px;
     white-space: nowrap;
-    margin: 9px;
+    margin: var(--spacing-sm);
     position: relative;
+    padding: var(--spacing-sm) var(--spacing-md);
+    border: none;
+    border-radius: var(--border-radius);
+    background: var(--canvas-elevated);
+    color: var(--fg);
+    cursor: pointer;
+    transition: all var(--transition) var(--easing);
+    @include soft-elevation(1);
+
+    &:hover {
+        @include soft-elevation(2);
+        background: var(--canvas-inset);
+    }
+
+    &:active {
+        transform: translateY(1px);
+        @include soft-elevation(1);
+    }
+
+    &:focus {
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+    }
 }
 
 .hitem {
-    margin-top: 2px;
+    margin-top: var(--spacing-xs);
 }
 
 .stat {
-    padding-top: 10px;
+    padding-top: var(--spacing-md);
+    color: var(--fg-subtle);
 
     @media (max-width: 583px) {
         display: none;
@@ -43,8 +72,9 @@ button {
 }
 
 .stat2 {
-    padding-top: 10px;
+    padding-top: var(--spacing-md);
     font-weight: normal;
+    color: var(--fg-subtle);
 }
 
 :focus {
@@ -61,24 +91,35 @@ button {
     transform: translate(-50%, -100%);
     font-weight: normal;
     display: inline-block;
+    color: var(--fg-subtle);
 }
 
 .spacer {
-    height: 18px;
+    height: var(--spacing-lg);
 }
 
 .spacer2 {
-    height: 16px;
+    height: var(--spacing-md);
 }
 
 #outer {
-    border-top: 1px solid color(border);
+    border-top: none;
+    background: var(--canvas-elevated);
+    padding: var(--spacing-md) var(--spacing-lg);
+    border-radius: var(--border-radius-medium);
+    @include soft-elevation(2);
+    max-width: 600px;
+    width: 100%;
     /* Better compatibility with graphics pad/touchscreen */
     -webkit-user-select: none;
 }
 
+#innertable {
+    width: 100%;
+}
+
 .nightMode {
     #outer {
-        border-top-color: color(border-subtle);
+        background: var(--canvas-elevated);
     }
 }

@@ -30,11 +30,15 @@ License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 {/if}
 
 <style lang="scss">
-    @use "$lib/sass/elevation" as *;
     .graph {
         /* See graph-styles.ts for constants referencing global styles */
         :global(.graph-element-clickable) {
             cursor: pointer;
+            transition: opacity var(--transition) var(--easing);
+
+            &:hover {
+                opacity: 0.8;
+            }
         }
 
         /* Customizing the standard x and y tick markers and text on the graphs.
@@ -73,6 +77,8 @@ License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 
     .subtitle {
         text-align: center;
-        margin-bottom: 1em;
+        margin-bottom: var(--spacing-md);
+        color: var(--fg-subtle);
+        font-size: 0.9em;
     }
 </style>

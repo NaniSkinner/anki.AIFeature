@@ -2,6 +2,7 @@
 // License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 
 @use "$lib/sass/bootstrap-dark";
+@use "$lib/sass/elevation" as *;
 
 @import "$lib/sass/base";
 @import "$lib/sass/bootstrap-forms";
@@ -15,70 +16,92 @@
     min-height: 100vh;
     display: flex;
     flex-direction: column;
+    background: var(--canvas);
 }
 
 .source-selector {
     display: flex;
     flex-direction: column;
-    gap: 1rem;
-    padding: 1rem;
+    gap: var(--spacing-lg);
+    padding: var(--spacing-lg);
 }
 
 .file-input-area {
-    border: 2px dashed var(--border);
-    border-radius: 8px;
-    padding: 2rem;
+    border: 2px dashed var(--border-subtle);
+    border-radius: var(--border-radius-medium);
+    padding: var(--spacing-xl);
     text-align: center;
     cursor: pointer;
-    transition: border-color 0.2s;
+    transition: all var(--transition) var(--easing);
+    background: var(--canvas-elevated);
 
     &:hover {
-        border-color: var(--accent);
+        border-color: var(--border-focus);
+        @include soft-elevation(1);
     }
 
     &.dragging {
-        border-color: var(--accent);
+        border-color: var(--border-focus);
         background: var(--canvas-elevated);
+        @include soft-elevation(2);
     }
 }
 
 .text-input-area {
     display: flex;
     flex-direction: column;
-    gap: 0.5rem;
+    gap: var(--spacing-sm);
 
     textarea {
         min-height: 200px;
         resize: vertical;
+        border: 1.5px solid var(--border-subtle);
+        border-radius: var(--border-radius);
+        padding: var(--spacing-md);
+        background: var(--canvas-elevated);
+        transition: all var(--transition) var(--easing);
+
+        &:focus {
+            border-color: var(--border-focus);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+            outline: none;
+        }
     }
 }
 
 .card-list {
     display: flex;
     flex-direction: column;
-    gap: 0.5rem;
-    padding: 1rem;
+    gap: var(--spacing-md);
+    padding: var(--spacing-lg);
     overflow-y: auto;
     flex: 1;
 }
 
 .card-item {
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 1rem;
+    border: none;
+    border-radius: var(--border-radius-medium);
+    padding: var(--spacing-lg);
     background: var(--canvas-elevated);
     display: flex;
     flex-direction: column;
-    gap: 0.5rem;
+    gap: var(--spacing-sm);
+    @include soft-elevation(2);
+    transition: all var(--transition) var(--easing);
+
+    &:hover {
+        @include soft-elevation(3);
+    }
 
     &.approved {
-        border-color: var(--flag-4);
-        background: rgba(76, 175, 80, 0.1);
+        border-left: 4px solid var(--flag-4);
+        background: rgba(76, 175, 80, 0.05);
     }
 
     &.rejected {
-        border-color: var(--flag-1);
-        background: rgba(244, 67, 54, 0.1);
+        border-left: 4px solid var(--flag-1);
+        background: rgba(244, 67, 54, 0.05);
+        opacity: 0.7;
     }
 }
 
@@ -90,27 +113,27 @@
 
 .card-type-badge {
     font-size: 0.75rem;
-    padding: 0.25rem 0.5rem;
-    border-radius: 4px;
-    background: var(--canvas);
+    padding: var(--spacing-xs) var(--spacing-sm);
+    border-radius: var(--border-radius-pill);
+    background: var(--canvas-inset);
     color: var(--fg-subtle);
 }
 
 .card-actions {
     display: flex;
-    gap: 0.5rem;
+    gap: var(--spacing-sm);
 }
 
 .card-content {
     display: flex;
     flex-direction: column;
-    gap: 0.5rem;
+    gap: var(--spacing-sm);
 
     .front,
     .back {
-        padding: 0.5rem;
-        background: var(--canvas);
-        border-radius: 4px;
+        padding: var(--spacing-md);
+        background: var(--canvas-inset);
+        border-radius: var(--border-radius);
     }
 
     .front {
@@ -121,29 +144,30 @@
 .card-tags {
     display: flex;
     flex-wrap: wrap;
-    gap: 0.25rem;
+    gap: var(--spacing-xs);
 
     .tag {
         font-size: 0.75rem;
-        padding: 0.125rem 0.375rem;
-        border-radius: 4px;
-        background: var(--canvas);
+        padding: var(--spacing-xs) var(--spacing-sm);
+        border-radius: var(--border-radius-pill);
+        background: var(--canvas-inset);
         color: var(--fg-subtle);
     }
 }
 
 .bottom-bar {
-    padding: 1rem;
-    border-top: 1px solid var(--border);
+    padding: var(--spacing-md) var(--spacing-lg);
+    border-top: none;
     display: flex;
     justify-content: space-between;
     align-items: center;
     background: var(--canvas-elevated);
+    @include soft-elevation(3);
 }
 
 .import-options {
     display: flex;
-    gap: 1rem;
+    gap: var(--spacing-md);
     align-items: center;
 }
 
@@ -153,14 +177,19 @@
     align-items: center;
     justify-content: center;
     min-height: 200px;
-    gap: 1rem;
+    gap: var(--spacing-lg);
+    padding: var(--spacing-xl);
+    background: var(--canvas-elevated);
+    border-radius: var(--border-radius-medium);
+    margin: var(--spacing-lg);
+    @include soft-elevation(2);
 }
 
 .spinner {
     width: 40px;
     height: 40px;
-    border: 3px solid var(--border);
-    border-top-color: var(--accent);
+    border: 3px solid var(--border-subtle);
+    border-top-color: var(--button-primary-bg);
     border-radius: 50%;
     animation: spin 1s linear infinite;
 }
@@ -173,38 +202,57 @@
 
 .error-message {
     color: var(--flag-1);
-    padding: 1rem;
-    border: 1px solid var(--flag-1);
-    border-radius: 8px;
-    background: rgba(244, 67, 54, 0.1);
+    padding: var(--spacing-lg);
+    border: none;
+    border-left: 4px solid var(--flag-1);
+    border-radius: var(--border-radius);
+    background: rgba(244, 67, 54, 0.08);
+    margin: var(--spacing-md) var(--spacing-lg);
 }
 
 .success-message {
-    color: var(--flag-4);
-    padding: 1rem;
-    border: 1px solid var(--flag-4);
-    border-radius: 8px;
-    background: rgba(76, 175, 80, 0.1);
+    padding: var(--spacing-xl);
+    border: none;
+    border-radius: var(--border-radius-medium);
+    background: var(--canvas-elevated);
+    text-align: center;
+    margin: var(--spacing-lg);
+    @include soft-elevation(2);
+
+    h3 {
+        color: var(--flag-4);
+        margin-bottom: var(--spacing-md);
+    }
+
+    p {
+        color: var(--fg-subtle);
+        margin-bottom: var(--spacing-lg);
+    }
 }
 
 .stats-bar {
     display: flex;
-    gap: 1rem;
-    padding: 0.5rem 1rem;
-    background: var(--canvas);
-    border-bottom: 1px solid var(--border);
+    gap: var(--spacing-lg);
+    padding: var(--spacing-md) var(--spacing-lg);
+    background: var(--canvas-elevated);
+    border-bottom: none;
     font-size: 0.875rem;
+    @include soft-elevation(1);
 
     .stat {
         display: flex;
-        gap: 0.25rem;
+        gap: var(--spacing-xs);
 
         .label {
             color: var(--fg-subtle);
         }
 
         .value {
-            font-weight: 500;
+            font-weight: 600;
+        }
+
+        &.cost .value {
+            color: var(--fg-link);
         }
     }
 }

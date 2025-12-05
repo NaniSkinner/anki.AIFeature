@@ -83,18 +83,40 @@ License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 
 <style lang="scss">
     .congrats {
-        margin-top: 2em;
+        margin-top: var(--spacing-xl);
         max-width: 30em;
         font-size: var(--font-size);
+        padding: var(--spacing-lg);
+        background: var(--canvas-elevated);
+        border-radius: var(--border-radius-medium);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+
+        h1 {
+            font-weight: 600;
+            margin-bottom: var(--spacing-md);
+        }
+
+        p {
+            margin-bottom: var(--spacing-sm);
+            color: var(--fg-subtle);
+        }
 
         :global(a) {
             color: var(--fg-link);
             text-decoration: none;
+            transition: opacity var(--transition) var(--easing);
+
+            &:hover {
+                opacity: 0.8;
+            }
         }
     }
 
     .description {
-        border: 1px solid var(--border);
-        padding: 1em;
+        border: none;
+        padding: var(--spacing-md);
+        background: var(--canvas-inset);
+        border-radius: var(--border-radius);
+        margin-top: var(--spacing-md);
     }
 </style>

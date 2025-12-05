@@ -252,7 +252,7 @@ License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 <style lang="scss">
     @use "../sass/button-mixins" as button;
 
-    $padding-inline: 0.5rem;
+    $padding-inline: 0.75rem;
 
     .select-container {
         @include button.select($with-disabled: false);
@@ -262,6 +262,12 @@ License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
         display: flex;
         flex-flow: row;
         justify-content: space-between;
+        transition: all var(--transition) var(--easing);
+
+        &:focus {
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+        }
 
         .inner {
             flex-grow: 1;
@@ -287,13 +293,20 @@ License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
     .chevron {
         height: 100%;
         align-self: flex-end;
-        border-left: 1px solid var(--border-subtle);
+        border-left: none;
+        padding: 0 var(--spacing-xs);
+        color: var(--fg-subtle);
+        transition: color var(--transition) var(--easing);
+    }
+
+    .select-container:hover .chevron {
+        color: var(--fg);
     }
 
     :global([dir="rtl"]) {
         .chevron {
             border-left: none;
-            border-right: 1px solid var(--border-subtle);
+            border-right: none;
         }
     }
 </style>

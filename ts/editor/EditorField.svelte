@@ -135,8 +135,9 @@ License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
     /* Make sure labels are readable on custom Qt backgrounds */
     .field-container {
         background: var(--canvas);
-        border-radius: var(--border-radius);
+        border-radius: var(--border-radius-medium);
         overflow: hidden;
+        margin-bottom: var(--spacing-sm);
     }
 
     .field-container.hide {
@@ -146,20 +147,23 @@ License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
     .editor-field {
         overflow: hidden;
         /* make room for thicker focus border */
-        margin: 1px;
+        margin: 2px;
 
         border-radius: var(--border-radius);
-        border: 1px solid var(--border);
+        border: none;
+        background: var(--canvas-elevated);
 
-        @include elevation(1);
+        @include soft-elevation(1);
+        transition: box-shadow var(--transition) var(--easing);
 
         outline-offset: -1px;
         &.dupe,
         &.dupe:focus-within {
-            outline: 2px solid var(--accent-danger);
+            box-shadow: 0 0 0 2px var(--accent-danger);
         }
         &:focus-within {
-            outline: 2px solid var(--border-focus);
+            @include soft-elevation(2);
+            box-shadow: 0 0 0 2px var(--border-focus), 0 2px 8px rgba(0, 0, 0, 0.06);
         }
     }
 </style>

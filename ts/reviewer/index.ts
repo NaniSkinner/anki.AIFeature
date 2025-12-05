@@ -118,6 +118,21 @@ const renderError = (type: string) => (error: unknown): string => {
     );
 };
 
+// Helper function to wait for animation to complete
+function waitForAnimation(element: HTMLElement, animationName: string): Promise<void> {
+    return new Promise((resolve) => {
+        const onAnimationEnd = (event: AnimationEvent) => {
+            if (event.animationName === animationName) {
+                element.removeEventListener("animationend", onAnimationEnd);
+                resolve();
+            }
+        };
+        element.addEventListener("animationend", onAnimationEnd);
+        // Fallback timeout in case animation doesn't fire
+        setTimeout(resolve, 350);
+    });
+}
+
 export async function _updateQA(
     html: string,
     _unusused: unknown,
@@ -134,7 +149,10 @@ export async function _updateQA(
 
     await preloadResources(html);
 
-    qa.style.opacity = "0";
+    // Start flip-out animation
+    qa.classList.remove("flip-in");
+    qa.classList.add("flip-out");
+    await waitForAnimation(qa, "flipOut");
 
     try {
         await setInnerHTML(qa, html);
@@ -157,7 +175,10 @@ export async function _updateQA(
         })
         .catch(renderError("MathJax"));
 
-    qa.style.opacity = "1";
+    // Start flip-in animation
+    qa.classList.remove("flip-out");
+    qa.classList.add("flip-in");
+    await waitForAnimation(qa, "flipIn");
 
     await _runHook(onShownHook);
 }
@@ -171,7 +192,9 @@ export function _showQuestion(q: string, a: string, bodyclass: string): void {
                 // return to top of window
                 window.scrollTo(0, 0);
 
+                // Set body class and remove answer indicator
                 document.body.className = bodyclass;
+                document.body.classList.remove("card-answer");
             },
             function() {
                 // focus typing area if visible
@@ -200,6 +223,9 @@ export function _showAnswer(a: string, bodyclass: string): void {
                     //  when previewing
                     document.body.className = bodyclass;
                 }
+
+                // Add answer indicator class for visual differentiation
+                document.body.classList.add("card-answer");
 
                 // avoid scrolling to the answer until images load
                 allImagesLoaded().then(scrollToAnswer);

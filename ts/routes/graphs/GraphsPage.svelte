@@ -52,17 +52,19 @@ License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 <style lang="scss">
     .graphs-container {
         display: grid;
-        gap: 1em;
+        gap: var(--spacing-lg);
         grid-template-columns: repeat(3, minmax(0, 1fr));
         // required on Safari to stretch whole width
-        width: calc(100vw - 3em);
-        margin-left: 1em;
-        margin-right: 1em;
+        width: calc(100vw - var(--spacing-xl) * 2);
+        margin-left: var(--spacing-xl);
+        margin-right: var(--spacing-xl);
+        padding: var(--spacing-md) 0;
 
         @media only screen and (max-width: 600px) {
-            width: calc(100vw - 1rem);
-            margin-left: 0.5rem;
-            margin-right: 0.5rem;
+            width: calc(100vw - var(--spacing-md));
+            margin-left: var(--spacing-sm);
+            margin-right: var(--spacing-sm);
+            gap: var(--spacing-md);
         }
 
         @media only screen and (max-width: 1400px) {
@@ -83,6 +85,6 @@ License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
     }
 
     .spacer {
-        height: 1.5em;
+        height: var(--spacing-xl);
     }
 </style>
