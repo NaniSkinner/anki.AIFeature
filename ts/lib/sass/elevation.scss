@@ -85,3 +85,31 @@ $ambient-opacity: 0.12;
 @mixin elevation($level, $opacity-boost: 0, $color: #141414) {
     box-shadow: box-shadow($level, $opacity-boost, $color);
 }
+
+// Mochi-style soft shadows - cleaner, more subtle than Material Design
+$mochi-shadows: (
+    0: none,
+    1: 0 1px 3px rgba(0, 0, 0, 0.04),
+    2: 0 2px 8px rgba(0, 0, 0, 0.06),
+    3: 0 4px 16px rgba(0, 0, 0, 0.08),
+    4: 0 8px 24px rgba(0, 0, 0, 0.10),
+    5: 0 12px 32px rgba(0, 0, 0, 0.12),
+);
+
+@mixin soft-elevation($level) {
+    box-shadow: map.get($mochi-shadows, $level);
+}
+
+// Dark mode variant with slightly higher opacity for visibility
+$mochi-shadows-dark: (
+    0: none,
+    1: 0 1px 3px rgba(0, 0, 0, 0.12),
+    2: 0 2px 8px rgba(0, 0, 0, 0.16),
+    3: 0 4px 16px rgba(0, 0, 0, 0.20),
+    4: 0 8px 24px rgba(0, 0, 0, 0.24),
+    5: 0 12px 32px rgba(0, 0, 0, 0.28),
+);
+
+@mixin soft-elevation-dark($level) {
+    box-shadow: map.get($mochi-shadows-dark, $level);
+}

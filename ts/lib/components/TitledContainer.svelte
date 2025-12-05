@@ -39,30 +39,43 @@ License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
     .container {
         width: 100%;
         background: var(--canvas-elevated);
-        border: 1px solid var(--border-subtle);
-        border-radius: var(--border-radius-medium, 10px);
+        border: none;
+        border-radius: var(--border-radius-medium);
 
         &.light {
-            @include elevation(3);
+            @include soft-elevation(2);
         }
         &.dark {
-            @include elevation(4);
+            @include soft-elevation-dark(2);
         }
 
-        padding: 1rem 1.75rem 0.75rem 1.25rem;
+        padding: var(--spacing-lg) var(--spacing-xl);
         &.rtl {
-            padding: 1rem 1.25rem 0.75rem 1.75rem;
+            padding: var(--spacing-lg) var(--spacing-xl);
         }
         page-break-inside: avoid;
+
+        transition: box-shadow var(--transition) var(--easing);
+        &:hover {
+            &.light {
+                @include soft-elevation(3);
+            }
+            &.dark {
+                @include soft-elevation-dark(3);
+            }
+        }
     }
     h1 {
-        border-bottom: 1px solid var(--border);
-        padding-bottom: 0.25em;
+        border-bottom: none;
+        padding-bottom: var(--spacing-md);
+        margin-bottom: var(--spacing-sm);
+        font-weight: 600;
+        font-size: 1.1rem;
     }
     .help-badge {
         right: 0;
         top: 0;
-        color: #555;
+        color: var(--fg-subtle);
         &.rtl {
             right: unset;
             left: 0;

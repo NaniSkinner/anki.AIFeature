@@ -210,18 +210,28 @@ License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
     .spin-box {
         width: 100%;
         background: var(--canvas-inset);
-        border: 1px solid var(--border);
+        border: 1.5px solid var(--border-subtle);
         border-radius: var(--border-radius);
         overflow: hidden;
         position: relative;
         display: flex;
         justify-content: space-between;
+        transition: all var(--transition) var(--easing);
+
+        &:hover {
+            border-color: var(--border);
+        }
+
+        &:focus-within {
+            border-color: var(--border-focus);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+        }
 
         .suffix {
             position: absolute;
             pointer-events: none;
             white-space: pre;
-            left: 0.5em;
+            left: var(--spacing-sm);
             top: 1px;
 
             @supports (-webkit-touch-callout: none) {
@@ -243,8 +253,7 @@ License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
             &::-webkit-inner-spin-button {
                 display: none;
             }
-            padding-left: 0.5em;
-            padding-right: 0.5em;
+            padding: var(--spacing-sm) var(--spacing-md);
         }
 
         &:hover,
@@ -264,5 +273,6 @@ License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
     .spinner {
         opacity: 0;
         height: 100%;
+        transition: opacity var(--transition) var(--easing);
     }
 </style>

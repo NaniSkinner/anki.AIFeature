@@ -18,23 +18,67 @@ $vars: (
                 default: 15px,
             ),
         ),
+        spacing: (
+            xs: (
+                "Extra small spacing for tight areas",
+                (
+                    default: 4px,
+                ),
+            ),
+            sm: (
+                "Small spacing",
+                (
+                    default: 8px,
+                ),
+            ),
+            md: (
+                "Medium spacing - primary unit",
+                (
+                    default: 16px,
+                ),
+            ),
+            lg: (
+                "Large spacing for sections",
+                (
+                    default: 24px,
+                ),
+            ),
+            xl: (
+                "Extra large spacing for major sections",
+                (
+                    default: 32px,
+                ),
+            ),
+            xxl: (
+                "Maximum spacing for page-level breathing room",
+                (
+                    default: 48px,
+                ),
+            ),
+        ),
         border-radius: (
             default: (
                 "Used to round corners of various UI elements",
                 (
-                    default: 5px,
+                    default: 8px,
                 ),
             ),
             medium: (
                 "Used for container corners",
                 (
-                    default: 12px,
+                    default: 16px,
                 ),
             ),
             large: (
-                "Used for pill-shaped buttons",
+                "Used for larger rounded elements",
                 (
-                    default: 15px,
+                    default: 24px,
+                ),
+            ),
+            pill: (
+                "Fully rounded pill shape for badges and tags",
+                (
+                    default: 9999px,
                 ),
             ),
         ),
@@ -42,19 +86,27 @@ $vars: (
             default: (
                 "Default duration of transitions in milliseconds",
                 (
-                    default: 180ms,
+                    default: 150ms,
                 ),
             ),
             medium: (
                 "Slightly longer transition duration in milliseconds",
                 (
-                    default: 500ms,
+                    default: 300ms,
                 ),
             ),
             slow: (
                 "Long transition duration in milliseconds",
                 (
-                    default: 1000ms,
+                    default: 500ms,
+                ),
+            ),
+        ),
+        easing: (
+            default: (
+                "Default easing curve for smooth animations",
+                (
+                    default: cubic-bezier(0.25, 0.1, 0.25, 1),
                 ),
             ),
         ),
@@ -109,14 +161,14 @@ $vars: (
             default: (
                 "Window background",
                 (
-                    light: palette(lightgray, 2),
+                    light: #f8f9fa,
                     dark: palette(darkgray, 5),
                 ),
             ),
             elevated: (
                 "Background of containers",
                 (
-                    light: white,
+                    light: #ffffff,
                     dark: palette(darkgray, 4),
                 ),
             ),

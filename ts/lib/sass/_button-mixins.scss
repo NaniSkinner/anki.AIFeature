@@ -20,29 +20,21 @@
     border-bottom-right-radius: var(--border-right-radius);
 }
 
+// Mochi-style flat background (no gradients)
 @mixin background($primary: false, $hover: true) {
     @if $primary {
         background: var(--button-primary-bg);
         @if $hover {
             &:hover {
-                background: linear-gradient(
-                    180deg,
-                    var(--button-primary-gradient-start) 0%,
-                    var(--button-primary-gradient-end) 100%
-                );
+                background: var(--button-primary-gradient-start);
             }
         }
     } @else {
-        background: var(--button-bg);
+        background: var(--canvas-elevated);
         @if $hover {
             &:hover {
-                background: linear-gradient(
-                    180deg,
-                    var(--button-gradient-start) 0%,
-                    var(--button-gradient-end) 100%
-                );
-                /* Makes distinguishing hover state in light theme easier */
-                border: 1px solid var(--shadow);
+                background: var(--canvas-inset);
+                border-color: var(--border);
             }
         }
     }
@@ -62,13 +54,16 @@
         @if $primary {
             border: none;
         } @else {
-            border: 1px solid var(--border-subtle);
-            border-bottom-color: var(--shadow);
+            border: 1.5px solid var(--border-subtle);
         }
     } @else {
         border: none;
     }
     @include background($primary, $hover: $with-hover);
+    @include soft-elevation(1);
+
+    border-radius: var(--border-radius);
+    transition: all var(--transition) var(--easing);
 
     @if ($primary) {
         color: white;
@@ -76,19 +71,28 @@
         color: var(--fg);
     }
 
+    &:hover {
+        @include soft-elevation(2);
+    }
+
     @if ($with-active) {
         &:active {
-            @include impressed-shadow(0.35);
-            border-color: var(--border-subtle);
+            transform: translateY(1px);
+            @include soft-elevation(1);
         }
         @if ($active-class != "") {
             &.#{$active-class} {
-                @include impressed-shadow(0.35);
                 background: var(--button-primary-bg);
                 color: white;
-                border-color: var(--border);
+                border-color: var(--button-primary-bg);
+                @include soft-elevation(1);
             }
         }
+    }
+
+    &:focus-visible {
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
     }
 
     @if ($with-disabled) {
@@ -97,8 +101,10 @@
             cursor: not-allowed;
             color: var(--fg-disabled);
             box-shadow: none !important;
-            background-color: var(--button-gradient-end);
-            border-bottom-color: var(--border-subtle);
+            background-color: var(--button-disabled);
+            border-color: var(--border-subtle);
+            transform: none;
+            opacity: 0.6;
         }
     }
 }

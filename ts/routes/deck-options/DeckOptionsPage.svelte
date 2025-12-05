@@ -133,16 +133,22 @@ License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 
     .deck-options-page {
         overflow-x: hidden;
+        padding: var(--spacing-lg);
+        background: var(--canvas);
 
         :global(.container-columns) {
             display: grid;
-            gap: 0px;
+            gap: var(--spacing-lg);
+        }
+
+        :global(.row-columns) {
+            margin-bottom: var(--spacing-md);
         }
 
         @include bp.with-breakpoint("lg") {
             :global(.container-columns) {
                 grid-template-columns: repeat(2, 1fr);
-                gap: 20px;
+                gap: var(--spacing-xl);
             }
         }
     }

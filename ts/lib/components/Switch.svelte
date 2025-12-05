@@ -33,14 +33,37 @@ License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
     .form-check-input {
         -webkit-appearance: none;
         appearance: none;
-        height: 1.5em;
+        height: 1.75em;
         /* otherwise the switch circle shows slightly off-centered */
         margin-top: 0;
+        border-radius: var(--border-radius-pill);
+        border: 2px solid var(--border-subtle);
+        background-color: var(--canvas-inset);
+        transition: all var(--transition) var(--easing);
 
         .form-switch & {
-            width: 3em;
+            width: 3.5em;
             margin-left: 1.5em;
             cursor: pointer;
+        }
+
+        &:checked {
+            background-color: var(--button-primary-bg);
+            border-color: var(--button-primary-bg);
+        }
+
+        &:focus {
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+            outline: none;
+        }
+
+        &:hover:not(:disabled) {
+            border-color: var(--border);
+        }
+
+        &:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
         }
     }
 

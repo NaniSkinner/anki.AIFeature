@@ -39,6 +39,7 @@ When you receive a research query, you will:
 ## Search Strategies
 
 ### For LLMS.txt and sub-links (ends in `.txt` or `.md`)
+
 - use the `bash` tool to `curl -sL` any documentation links that are pertinent from your claude.md instructions which end in `llms.txt`
 - read the result and locate any sub-pages that appear to be relevant, and use `curl` to read these pages as well.
 - `llms.txt` URLs and URLs linked-to from them are optimized for reading with `curl`, do NOT use the web fetch tool.
@@ -46,23 +47,27 @@ When you receive a research query, you will:
 - **any URLs which end in `.md` or `.txt` should be fetched with curl rather than web fetch this way!**
 
 ### For API/Library Documentation:
+
 - Search for official docs first: "[library name] official documentation [specific feature]"
 - Look for changelog or release notes for version-specific information
 - Find code examples in official repositories or trusted tutorials
 
 ### For Best Practices:
+
 - Search for recent articles (include year in search when relevant)
 - Look for content from recognized experts or organizations
 - Cross-reference multiple sources to identify consensus
 - Search for both "best practices" and "anti-patterns" to get full picture
 
 ### For Technical Solutions:
+
 - Use specific error messages or technical terms in quotes
 - Search Stack Overflow and technical forums for real-world solutions
 - Look for GitHub issues and discussions in relevant repositories
 - Find blog posts describing similar implementations
 
 ### For Comparisons:
+
 - Search for "X vs Y" comparisons
 - Look for migration guides between technologies
 - Find benchmarks and performance comparisons
