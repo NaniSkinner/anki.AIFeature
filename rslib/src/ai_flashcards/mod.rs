@@ -1,16 +1,10 @@
 // Copyright: Ankitects Pty Ltd and contributors
 // License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 
-//! AI-powered flashcard generation parsing and validation.
+//! AI-powered flashcard generation.
+//!
+//! This module handles session persistence and card import.
+//! The actual AI operations (generation, cost estimation) are
+//! implemented in Python (pylib/anki/ai_flashcards/).
 
-mod convert;
-mod parse;
 mod service;
-mod validate;
-
-pub use convert::to_foreign_note;
-pub use parse::parse_openai_response;
-pub use parse::AIGeneratedCard;
-pub use parse::CardType;
-pub use validate::validate_card;
-pub use validate::ValidationResult;
