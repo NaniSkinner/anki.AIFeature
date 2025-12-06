@@ -169,6 +169,39 @@
     display: flex;
     gap: var(--spacing-md);
     align-items: center;
+    flex-wrap: wrap;
+}
+
+.deck-selector {
+    min-width: 250px;
+    max-width: 350px;
+}
+
+.new-deck-input {
+    display: flex;
+    gap: var(--spacing-sm);
+    align-items: center;
+
+    input {
+        min-width: 200px;
+        padding: var(--spacing-xs) var(--spacing-sm);
+        border: 1.5px solid var(--border-subtle);
+        border-radius: var(--border-radius);
+        background: var(--canvas-inset);
+        font-size: 0.9em;
+        transition: all var(--transition) var(--easing);
+
+        &:focus {
+            border-color: var(--border-focus);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+            outline: none;
+        }
+    }
+
+    .btn-sm {
+        padding: var(--spacing-xs) var(--spacing-sm);
+        font-size: 0.85em;
+    }
 }
 
 .progress-indicator {

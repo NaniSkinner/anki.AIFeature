@@ -3,13 +3,14 @@ Copyright: Ankitects Pty Ltd and contributors
 License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 -->
 <script lang="ts">
-    import type { DeckNameId } from "@generated/anki/decks_pb";
+    import { DeckNameId } from "@generated/anki/decks_pb";
     import { importApprovedCards, saveSession, clearSession } from "@generated/backend";
     import { bridgeCommand } from "@tslib/bridgecommand";
     import { onMount } from "svelte";
 
     import Container from "$lib/components/Container.svelte";
     import EnumSelector from "$lib/components/EnumSelector.svelte";
+    import { newDeck, addDeck } from "@generated/backend";
 
     import "./ai-flashcards-base.scss";
     import SourceSelector from "./SourceSelector.svelte";
@@ -85,8 +86,69 @@ License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
     let sourceText = session.sourceText || "";
     let sourceUrl = "";
     let selectedDeckId = decks.entries[0]?.id || 0n;
+    let newDeckName = "";
+    let showNewDeckInput = false;
     let error: string | null = null;
     let importResult: { imported: number; duplicates: number } | null = null;
+
+    // Build deck choices with "Create New Deck" option
+    $: deckChoices = [
+        ...decks.entries.map((d) => ({ label: d.name, value: d.id })),
+        { label: "+ Create New Deck...", value: 0n },
+    ];
+
+    // Watch for "Create New Deck" selection (value 0n)
+    $: if (selectedDeckId === 0n) {
+        showNewDeckInput = true;
+        // Reset to first deck so dropdown shows a valid selection if cancelled
+        selectedDeckId = decks.entries[0]?.id || 0n;
+    }
+
+    // Create new deck and select it
+    async function createNewDeck() {
+        console.log("[createNewDeck] Called with:", newDeckName);
+        if (!newDeckName.trim()) {
+            console.log("[createNewDeck] Empty name, returning");
+            return;
+        }
+
+        // Clear any previous error before attempting deck creation
+        error = null;
+
+        try {
+            // Get a new deck template and set the name
+            console.log("[createNewDeck] Calling newDeck()");
+            const deckTemplate = await newDeck({});
+            console.log("[createNewDeck] Got template:", deckTemplate);
+            deckTemplate.name = newDeckName.trim();
+
+            // Add the deck to the collection
+            console.log("[createNewDeck] Calling addDeck()");
+            const result = await addDeck(deckTemplate);
+            console.log("[createNewDeck] Success, id:", result.id);
+
+            // Update local decks list with the new deck
+            decks = {
+                entries: [
+                    ...decks.entries,
+                    new DeckNameId({ id: result.id, name: newDeckName.trim() }),
+                ],
+            };
+
+            // Select the newly created deck
+            selectedDeckId = result.id;
+            showNewDeckInput = false;
+            newDeckName = "";
+
+            // Notify main window to refresh deck list
+            bridgeCommand(
+                `ai_flashcards:${JSON.stringify({ action: "refresh_decks" })}`,
+            );
+        } catch (e) {
+            console.error("[createNewDeck] Error:", e);
+            error = `Failed to create deck: ${e}`;
+        }
+    }
     let actualCost: { tokens_used: number; cost_usd: number; model: string } | null =
         null;
 
@@ -218,6 +280,9 @@ License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
         currentStep = "importing";
         error = null;
 
+        console.log("[AI Import] Importing to deck ID:", selectedDeckId.toString());
+        console.log("[AI Import] Approved cards count:", approvedCount);
+
         try {
             const result = await importApprovedCards({
                 cards: cards.filter((c) => c.status === 1) as any,
@@ -233,6 +298,11 @@ License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
             // Clear session after successful import
             await clearSession({});
             currentStep = "done";
+
+            // Notify main window to refresh (shows new cards in deck counts)
+            bridgeCommand(
+                `ai_flashcards:${JSON.stringify({ action: "refresh_decks" })}`,
+            );
         } catch (e) {
             error = e instanceof Error ? e.message : String(e);
             currentStep = "review";
@@ -324,10 +394,32 @@ License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
         <div class="bottom-bar">
             <div class="import-options">
                 <span>Target Deck:</span>
-                <EnumSelector
-                    bind:value={selectedDeckId}
-                    choices={decks.entries.map((d) => ({ label: d.name, value: d.id }))}
-                />
+                {#if showNewDeckInput}
+                    <div class="new-deck-input">
+                        <input
+                            type="text"
+                            bind:value={newDeckName}
+                            placeholder="Enter deck name..."
+                            on:keydown={(e) => e.key === "Enter" && createNewDeck()}
+                        />
+                        <button class="btn btn-sm" on:click={createNewDeck}>
+                            Create
+                        </button>
+                        <button
+                            class="btn btn-sm"
+                            on:click={() => (showNewDeckInput = false)}
+                        >
+                            Cancel
+                        </button>
+                    </div>
+                {:else}
+                    <div class="deck-selector">
+                        <EnumSelector
+                            bind:value={selectedDeckId}
+                            choices={deckChoices}
+                        />
+                    </div>
+                {/if}
             </div>
             <div class="card-actions">
                 <button class="btn" on:click={approveAll}>Approve All</button>

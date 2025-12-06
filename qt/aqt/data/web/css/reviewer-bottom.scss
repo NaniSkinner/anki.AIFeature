@@ -29,27 +29,26 @@ body {
 }
 
 button {
-    min-width: 70px;
+    min-width: 60px;
     white-space: nowrap;
-    margin: var(--spacing-sm);
+    margin: var(--spacing-xs);
     position: relative;
-    padding: var(--spacing-sm) var(--spacing-md);
+    padding: var(--spacing-xs) var(--spacing-sm);
     border: none;
     border-radius: var(--border-radius);
-    background: var(--canvas-elevated);
+    background: var(--canvas-inset);
     color: var(--fg);
     cursor: pointer;
     transition: all var(--transition) var(--easing);
-    @include soft-elevation(1);
+    font-size: 0.9em;
 
     &:hover {
-        @include soft-elevation(2);
-        background: var(--canvas-inset);
+        @include soft-elevation(1);
+        background: var(--canvas-elevated);
     }
 
     &:active {
         transform: translateY(1px);
-        @include soft-elevation(1);
     }
 
     &:focus {
@@ -110,12 +109,36 @@ button {
     @include soft-elevation(2);
     max-width: 600px;
     width: 100%;
+    box-sizing: border-box;
+    overflow: hidden;
     /* Better compatibility with graphics pad/touchscreen */
     -webkit-user-select: none;
 }
 
 #innertable {
     width: 100%;
+    table-layout: fixed;
+}
+
+// Ensure the stat columns (Edit and More) don't push content out
+td.stat {
+    width: 80px;
+    min-width: 60px;
+
+    button {
+        min-width: unset;
+        width: 100%;
+        margin: var(--spacing-xs);
+    }
+}
+
+#middle {
+    // Center column takes remaining space
+    width: auto;
+
+    td {
+        padding: var(--spacing-xs);
+    }
 }
 
 .nightMode {

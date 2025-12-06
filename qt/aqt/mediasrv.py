@@ -663,6 +663,8 @@ exposed_backend_list = [
     "get_custom_colours",
     # DeckService
     "get_deck_names",
+    "new_deck",
+    "add_deck",
     # I18nService
     "i18n_resources",
     # ImportExportService

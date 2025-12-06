@@ -163,7 +163,9 @@ License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
         }
         &:focus-within {
             @include soft-elevation(2);
-            box-shadow: 0 0 0 2px var(--border-focus), 0 2px 8px rgba(0, 0, 0, 0.06);
+            box-shadow:
+                0 0 0 2px var(--border-focus),
+                0 2px 8px rgba(0, 0, 0, 0.06);
         }
     }
 </style>

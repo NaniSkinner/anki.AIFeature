@@ -134,6 +134,10 @@ License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
     function handleGenerate() {
         console.log("[SourceSelector] handleGenerate called");
         console.log("[SourceSelector] textInput length:", textInput.length);
+
+        // Clear any previous error before validation
+        error = null;
+
         if (!textInput.trim()) {
             error = "Please provide text to generate flashcards from.";
             return;

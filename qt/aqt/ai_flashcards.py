@@ -73,6 +73,10 @@ class AIFlashcardsDialog(QDialog):
                 return self._handle_fetch_url(request)
             elif action == "test_connection":
                 return self._handle_test_connection()
+            elif action == "refresh_decks":
+                # Trigger main window to refresh deck browser
+                self.mw.reset()
+                return json.dumps({"ok": True})
             else:
                 return json.dumps({"error": f"Unknown action: {action}"})
         except Exception as e:
