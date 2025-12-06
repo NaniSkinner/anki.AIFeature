@@ -104,30 +104,19 @@ License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
         selectedDeckId = decks.entries[0]?.id || 0n;
     }
 
-    // Create new deck and select it
     async function createNewDeck() {
-        console.log("[createNewDeck] Called with:", newDeckName);
         if (!newDeckName.trim()) {
-            console.log("[createNewDeck] Empty name, returning");
             return;
         }
 
-        // Clear any previous error before attempting deck creation
         error = null;
 
         try {
-            // Get a new deck template and set the name
-            console.log("[createNewDeck] Calling newDeck()");
             const deckTemplate = await newDeck({});
-            console.log("[createNewDeck] Got template:", deckTemplate);
             deckTemplate.name = newDeckName.trim();
 
-            // Add the deck to the collection
-            console.log("[createNewDeck] Calling addDeck()");
             const result = await addDeck(deckTemplate);
-            console.log("[createNewDeck] Success, id:", result.id);
 
-            // Update local decks list with the new deck
             decks = {
                 entries: [
                     ...decks.entries,
@@ -135,17 +124,14 @@ License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
                 ],
             };
 
-            // Select the newly created deck
             selectedDeckId = result.id;
             showNewDeckInput = false;
             newDeckName = "";
 
-            // Notify main window to refresh deck list
             bridgeCommand(
                 `ai_flashcards:${JSON.stringify({ action: "refresh_decks" })}`,
             );
         } catch (e) {
-            console.error("[createNewDeck] Error:", e);
             error = `Failed to create deck: ${e}`;
         }
     }
@@ -157,8 +143,6 @@ License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
     $: pendingCount = cards.filter((c) => c.status === 0).length;
 
     async function handleGenerate(text: string, name: string, url: string) {
-        console.log("[AIFlashcardsPage] handleGenerate called");
-        console.log("[AIFlashcardsPage] text length:", text.length, "name:", name);
         sourceText = text;
         sourceName = name;
         sourceUrl = url;
@@ -167,14 +151,10 @@ License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
         actualCost = null;
 
         try {
-            // Call Python backend for generation (via pycmd bridge)
-            console.log("[AIFlashcardsPage] Calling generateFlashcardsViaBackend");
             const result = await generateFlashcardsViaBackend(text, name);
-            console.log("[AIFlashcardsPage] Received cards:", result.cards.length);
             cards = result.cards;
             currentStep = "review";
 
-            // Store actual cost data
             if (result.cost_usd !== undefined && result.tokens_used !== undefined) {
                 actualCost = {
                     tokens_used: result.tokens_used,
@@ -183,14 +163,12 @@ License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
                 };
             }
 
-            // Save session for persistence
             await saveSession({
                 sourceName: name,
                 sourceText: text,
                 cards: cards as any,
             });
         } catch (e) {
-            console.error("[AIFlashcardsPage] Error in handleGenerate:", e);
             error = e instanceof Error ? e.message : String(e);
             currentStep = "source";
         }
@@ -200,10 +178,6 @@ License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
         text: string,
         name: string,
     ): Promise<GenerationResponse> {
-        console.log("[AIFlashcardsPage] generateFlashcardsViaBackend called");
-        // This will call the Python layer via bridgeCommand
-        // The Python layer runs OpenAI API in background thread and calls
-        // window._aiFlashcardsOnGenerate when done
         return new Promise((resolve, reject) => {
             pendingGenerateResolve = resolve;
             pendingGenerateReject = reject;
@@ -214,33 +188,17 @@ License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
                 sourceName: name,
             };
 
-            console.log("[AIFlashcardsPage] Sending bridgeCommand");
             bridgeCommand<string>(
                 `ai_flashcards:${JSON.stringify(request)}`,
                 (response: string) => {
-                    console.log("[AIFlashcardsPage] bridgeCommand response:", response);
                     try {
                         const result = JSON.parse(response);
-                        // If immediate error (like missing API key), reject now
                         if (result.error) {
-                            console.error(
-                                "[AIFlashcardsPage] Immediate error:",
-                                result.error,
-                            );
                             pendingGenerateResolve = null;
                             pendingGenerateReject = null;
                             reject(new Error(result.error));
-                        } else {
-                            console.log(
-                                "[AIFlashcardsPage] Status:",
-                                result.status,
-                                "- waiting for callback",
-                            );
                         }
-                        // If status is "generating", wait for _aiFlashcardsOnGenerate callback
-                        // (resolve/reject will be called by the global callback)
                     } catch (e) {
-                        console.error("[AIFlashcardsPage] Error parsing response:", e);
                         pendingGenerateResolve = null;
                         pendingGenerateReject = null;
                         reject(e);
@@ -248,10 +206,8 @@ License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
                 },
             );
 
-            // Timeout after 2 minutes
             setTimeout(() => {
                 if (pendingGenerateResolve) {
-                    console.error("[AIFlashcardsPage] Generation timed out");
                     pendingGenerateResolve = null;
                     pendingGenerateReject = null;
                     reject(new Error("Generation timed out after 2 minutes"));
@@ -263,12 +219,11 @@ License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
     function handleCardUpdate(cardId: string, status: number) {
         cards = cards.map((card) => (card.id === cardId ? { ...card, status } : card));
 
-        // Auto-save session on changes
         saveSession({
             sourceName,
             sourceText,
             cards: cards as any,
-        }).catch(console.error);
+        }).catch(() => {});
     }
 
     async function handleImport() {
@@ -279,9 +234,6 @@ License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
 
         currentStep = "importing";
         error = null;
-
-        console.log("[AI Import] Importing to deck ID:", selectedDeckId.toString());
-        console.log("[AI Import] Approved cards count:", approvedCount);
 
         try {
             const result = await importApprovedCards({
@@ -295,11 +247,9 @@ License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
                 duplicates: result.duplicateCount,
             };
 
-            // Clear session after successful import
             await clearSession({});
             currentStep = "done";
 
-            // Notify main window to refresh (shows new cards in deck counts)
             bridgeCommand(
                 `ai_flashcards:${JSON.stringify({ action: "refresh_decks" })}`,
             );
@@ -316,21 +266,17 @@ License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
         error = null;
         importResult = null;
         currentStep = "source";
-        clearSession({}).catch(console.error);
+        clearSession({}).catch(() => {});
     }
 
     function approveAll() {
         cards = cards.map((card) => ({ ...card, status: 1 }));
-        saveSession({ sourceName, sourceText, cards: cards as any }).catch(
-            console.error,
-        );
+        saveSession({ sourceName, sourceText, cards: cards as any }).catch(() => {});
     }
 
     function rejectAll() {
         cards = cards.map((card) => ({ ...card, status: 2 }));
-        saveSession({ sourceName, sourceText, cards: cards as any }).catch(
-            console.error,
-        );
+        saveSession({ sourceName, sourceText, cards: cards as any }).catch(() => {});
     }
 </script>
 

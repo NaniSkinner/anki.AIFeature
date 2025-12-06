@@ -132,10 +132,6 @@ License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
     }
 
     function handleGenerate() {
-        console.log("[SourceSelector] handleGenerate called");
-        console.log("[SourceSelector] textInput length:", textInput.length);
-
-        // Clear any previous error before validation
         error = null;
 
         if (!textInput.trim()) {
@@ -143,7 +139,6 @@ License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
             return;
         }
 
-        console.log("[SourceSelector] Dispatching generate event");
         dispatch("generate", {
             text: textInput,
             name: sourceName || "Untitled",
